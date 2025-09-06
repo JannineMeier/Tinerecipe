@@ -3,10 +3,6 @@
   const {store, AISLE_ORDER, STORE_TAGS, parseQty, formatQty, stepFor, ensureQtyObject} = window.AppData;
   const { $, h, toast } = window.UI;
 
-  // UI state
-  let hidePurchased = store.load('hidePurchased', false);
-  let storeFilter   = store.load('storeFilter', '');
-
   let lastDeleted = null; // {items:[...], where:'single'|'clear'}
 
   function addToCart(items, recipe=null){
@@ -27,7 +23,7 @@
         existing.addon = existing.addon || !!it.addon;
         (existing.sources=existing.sources||[]).push(source);
       }else{
-        cart.push({ id:crypto.randomUUID(), name:it.name, qty:incomingQtyStr, cat:it.cat, addon:!!it.addon, checked:false, sources:[source], lists: (it.lists||[]) });
+        cart.push({ id:crypto.randomUUID(), name:it.name, qty:incomingQtyStr, cat:it.cat, addon:!!it.addon, checked:false, purchased:false, sources:[source], lists: (it.lists||[]) });
       }
     }
     store.save('cart',cart); renderCart();
@@ -50,7 +46,6 @@
     });
     if(changed){ store.save('cart', window.AppData.cart); renderCart(); toast('Tags entfernt'); }
   }
-
   function removeTagFromItem(item, tag){
     if(!item.lists) return;
     item.lists = item.lists.filter(t=>t!==tag);
@@ -65,12 +60,7 @@
     if(!cart.length){ cartList.appendChild(h('div',{class:'card'},h('div',{class:'muted'},'Dein Einkaufskorb ist leer.'))); return; }
 
     for(const cat of AISLE_ORDER){
-      const items=cart.filter(i=>{
-        if(i.cat!==cat) return false;
-        if(hidePurchased && i.checked) return false;
-        if(storeFilter && !(i.lists||[]).includes(storeFilter)) return false;
-        return true;
-      });
+      const items=cart.filter(i=>i.cat===cat);
       if(!items.length) continue;
 
       const sec=h('div',{class:'card',style:'padding:10px'}); sec.appendChild(h('div',{class:'section-title',style:'margin-bottom:4px;'},cat));
@@ -78,16 +68,25 @@
         const line=h('div',{class:'checkline'});
         const cb=h('input',{type:'checkbox',checked:it.checked,onchange:()=>{ it.checked=cb.checked; store.save('cart',window.AppData.cart); }});
 
+        // gekauft-Style
+        if(it.purchased){
+          line.style.opacity='0.55';
+          line.style.filter='grayscale(0.7)';
+          line.style.textDecoration='line-through';
+        }else{
+          line.style.opacity='';
+          line.style.filter='';
+          line.style.textDecoration='';
+        }
+
+        // Linke Info: KEIN „aus Manuell/aus Rezept“ mehr – nur Tags (mit × entfernen)
         const left=h('div',{},
           h('div',{},`${it.name}${it.addon?' • add-on':''}`),
           (function(){
             const info=h('div',{class:'info'});
-            const origins = it.sources&&it.sources.length?`aus ${Array.from(new Set(it.sources.map(s=>s.title))).join(', ')}`:'manuell';
-            info.append(origins);
             if(it.lists && it.lists.length){
-              info.append(' • ');
               it.lists.forEach(tag=>{
-                const pill=h('span',{class:'pill',style:'margin-left:6px;'}, tag, ' ', h('span',{class:'x',title:'Tag entfernen',onclick:()=>removeTagFromItem(it, tag)},'×'));
+                const pill=h('span',{class:'pill',style:'margin-right:6px;'}, tag, ' ', h('span',{class:'x',title:'Tag entfernen',onclick:()=>removeTagFromItem(it, tag)},'×'));
                 info.append(pill);
               });
             }
@@ -99,10 +98,17 @@
         qtyInput.addEventListener('change',()=>{ it.qty=qtyInput.value; store.save('cart',window.AppData.cart); });
         const minus=h('button',{type:'button',class:'btn neutral icon small',onclick:()=>{ const q=parseQty(qtyInput.value||it.qty||''); if(q.value==null) return; const step=stepFor(q); const newVal=Math.max(0,q.value-step); qtyInput.value=formatQty(newVal,q.unit)||String(newVal); it.qty=qtyInput.value; store.save('cart',window.AppData.cart);} },'–');
         const plus =h('button',{type:'button',class:'btn neutral icon small',onclick:()=>{ const q=parseQty(qtyInput.value||it.qty||''); if(q.value==null) return; const step=stepFor(q); const newVal=q.value+step; qtyInput.value=formatQty(newVal,q.unit)||String(newVal); it.qty=qtyInput.value; store.save('cart',window.AppData.cart);} },'+');
+
+        // Info-Dialog zeigt weiterhin Herkunft / Mengenaufschlüsselung
         const infoBtn=h('button',{type:'button',title:'Herkunft anzeigen',class:'btn neutral icon small',onclick:()=>{ const list=(it.sources||[]).map(s=>`• ${s.qty?`${s.qty} – `:''}${s.title}`).join('\n'); alert(`Zutat: ${it.name}\nKategorie: ${it.cat}\nGesamt: ${it.qty||'–'}${it.addon?' (add-on)':''}\n\nHerkunft:\n${list||'—'}`); }},'?');
+
+        // „Gekauft“-Button (toggle)
+        const boughtBtn=h('button',{type:'button',class:'btn neutral small',onclick:()=>{ it.purchased=!it.purchased; store.save('cart',window.AppData.cart); renderCart(); }}, it.purchased?'Gekauft aufheben':'Gekauft');
+
         const del=h('button',{type:'button',class:'btn neutral small',onclick:()=>{ lastDeleted={items:[{...it}], where:'single'}; window.AppData.cart=window.AppData.cart.filter(x=>x.id!==it.id); store.save('cart',window.AppData.cart); renderCart(); showUndo('1 Artikel gelöscht'); }},'Löschen');
+
         const qtyWrap=h('div',{class:'qty'},minus,qtyInput,plus);
-        line.append(cb,left,h('span',{class:'right'}),qtyWrap,infoBtn,del); sec.appendChild(line);
+        line.append(cb,left,h('span',{class:'right'}),qtyWrap,infoBtn,boughtBtn,del); sec.appendChild(line);
       });
       cartList.appendChild(sec);
     }
@@ -130,21 +136,20 @@
 
   // Toolbar actions
   function checkAll(){ window.AppData.cart.forEach(i=>i.checked=true); store.save('cart',window.AppData.cart); renderCart(); }
-  function uncheckAll(){ window.AppData.cart.forEach(i=>i.checked=false); store.save('cart',window.AppData.cart); renderCart(); } // << fixed
+  function uncheckAll(){ window.AppData.cart.forEach(i=>i.checked=false); store.save('cart',window.AppData.cart); renderCart(); }
   function clearCart(){
     if(!confirm('Einkaufskorb wirklich leeren?')) return;
     lastDeleted={items:[...window.AppData.cart], where:'clear'};
     window.AppData.cart=[]; store.save('cart',window.AppData.cart); renderCart(); showUndo('Korb geleert');
   }
 
-  // State setters/getters
-  function setHidePurchased(v){ hidePurchased=!!v; store.save('hidePurchased', hidePurchased); renderCart(); }
-  function setStoreFilter(v){ storeFilter=v||''; store.save('storeFilter', storeFilter); renderCart(); }
-  function getState(){ return { hidePurchased, storeFilter, storeTags: STORE_TAGS.slice() }; }
+  // State-APIs (Store-Filter weiterhin verfügbar)
+  function applyStoreFilter(v){ store.save('storeFilter', v||''); renderCart(); }
+  function getStoreFilter(){ return store.load('storeFilter',''); }
 
   window.Cart = { addToCart, renderCart,
     applyStoreTagToChecked, clearTagsFromChecked,
     checkAll, uncheckAll, clearCart,
-    setHidePurchased, setStoreFilter, getState
+    applyStoreFilter, getStoreFilter
   };
 })();
