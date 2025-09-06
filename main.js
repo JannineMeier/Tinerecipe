@@ -1,6 +1,6 @@
 // main.js
 (function(){
-  // simple manifest & icons (nice to have)
+  // simple manifest & icons
   (function(){
     function makeIcon(size, letter='R'){
       const c=document.createElement('canvas'); c.width=size; c.height=size;
@@ -38,7 +38,7 @@
 
   // Import / Export
   function exportAll(){
-    const data={version:4, exportedAt:new Date().toISOString(), recipes:window.AppData.recipes, products:window.AppData.products, cart:window.AppData.cart};
+    const data={version:5, exportedAt:new Date().toISOString(), recipes:window.AppData.recipes, products:window.AppData.products, cart:window.AppData.cart};
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
     a.download=`rezepte_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -73,15 +73,29 @@
   }
 
   function wireCartToolbar(){
+    // fix: distinct handlers
     $('#btn-clear-cart').addEventListener('click',()=>window.Cart.clearCart());
     $('#btn-uncheck-all').addEventListener('click',()=>window.Cart.uncheckAll());
     $('#btn-check-all').addEventListener('click',()=>window.Cart.checkAll());
 
+    // store tag buttons
     const wrap = document.getElementById('store-buttons'); wrap.innerHTML='';
     STORE_TAGS.forEach(s=>wrap.appendChild(
       window.UI.h('button',{type:'button',class:'btn pink small',onclick:()=>window.Cart.applyStoreTagToChecked(s)},s)
     ));
     document.getElementById('btn-clear-tags-selected').addEventListener('click',()=>window.Cart.clearTagsFromChecked());
+
+    // store filter select
+    const sel = document.getElementById('store-filter'); sel.innerHTML='';
+    sel.appendChild(new Option('Alle Stores',''));
+    STORE_TAGS.forEach(s=>sel.appendChild(new Option(s,s)));
+    sel.value = window.Cart.getState().storeFilter || '';
+    sel.addEventListener('change',()=>window.Cart.setStoreFilter(sel.value));
+
+    // hide purchased toggle
+    const hideCb = document.getElementById('hide-purchased');
+    hideCb.checked = !!window.Cart.getState().hidePurchased;
+    hideCb.addEventListener('change',()=>window.Cart.setHidePurchased(hideCb.checked));
   }
 
   function init(){
@@ -94,18 +108,11 @@
     window.Products.renderProducts();
     window.Cart.renderCart();
     wireCartToolbar();
-    wireImportExport();
 
-    // Editor toggle
     document.getElementById('toggle-editor').addEventListener('click',(e)=>{ e.preventDefault(); const d=document.getElementById('recipe-editor'); d.open=!d.open; });
-
-    // Recipes search
     document.getElementById('search-recipes').addEventListener('input',()=>window.Recipes.renderRecipeList());
-
-    // Buttons default type safety (iOS)
     window.UI.$$('button').forEach(b=>{ if(!b.hasAttribute('type')) b.setAttribute('type','button'); });
   }
 
   init();
 })();
-
