@@ -1,101 +1,131 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Rezepte & Einkauf</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Shaniks Kitchen • Rezepte & Einkauf</title>
+
+  <!-- Cute script font for the title -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+  <!-- iOS/PWA theme color -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ff74b8">
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Rezepte & Einkauf</h1>
-    <div class="tabs">
-      <button id="tab-recipes" data-tab="recipes" class="tab active">Rezepte</button>
-      <button id="tab-products" data-tab="products" class="tab">Produkte</button>
-      <button id="tab-cart" data-tab="cart" class="tab">Einkaufskorb</button>
+<header>
+  <div class="brand">
+    <div class="brand-logo" aria-hidden="true">♡</div>
+    <div class="brand-titles">
+      <div class="brand-title">Shaniks Kitchen</div>
+      <div class="brand-sub">Rezepte • Produkte • Einkaufskorb</div>
     </div>
-  </header>
+  </div>
 
-  <main>
-    <!-- Rezepte -->
-    <section id="view-recipes">
-      <details id="recipe-editor" class="collapsible card">
-        <summary><span class="chev">▶</span> Neues Rezept</summary>
-        <div id="recipe-form"></div>
-      </details>
+  <div class="tabs">
+    <button type="button" class="tab active" data-tab="recipes" id="tab-recipes">Rezepte</button>
+    <button type="button" class="tab" data-tab="products" id="tab-products">Produkte</button>
+    <button type="button" class="tab" data-tab="cart" id="tab-cart">Einkaufskorb</button>
+  </div>
+</header>
 
-      <div class="card accent recipes">
+<main>
+  <!-- Rezepte -->
+  <section id="view-recipes">
+    <div class="card accent recipes">
+      <div class="row" style="gap:8px;">
+        <div class="section-title">Rezepte</div>
         <div class="row row-2">
-          <input id="search-recipes" type="search" placeholder="Rezepte oder Zutaten suchen…"/>
-          <div class="right">
-            <button class="btn pink small" id="btn-export">Export</button>
-            <button class="btn pink small" id="btn-import">Import</button>
-            <input type="file" id="import-file" style="display:none"/>
+          <input id="search-recipes" type="search" placeholder="Rezepte oder Zutaten suchen …" aria-label="Rezepte suchen">
+          <div class="right" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+            <input id="import-file" type="file" accept="application/json" style="display:none">
+            <button type="button" class="btn neutral" id="btn-import">Import</button>
+            <button type="button" class="btn neutral" id="btn-export">Export</button>
+            <button type="button" id="toggle-editor" class="btn pink">+ Neues Rezept</button>
           </div>
         </div>
       </div>
+    </div>
 
-      <details class="collapsible card" id="recipe-filters">
-        <summary><span class="chev">▶</span> Filter nach Tags</summary>
-        <div style="padding:12px;">
-          <div id="filter-chips"></div>
-          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn pink-ghost" id="btn-clear-filters">Filter zurücksetzen</button>
-          </div>
+    <details class="collapsible card" id="recipe-filters">
+      <summary><span class="chev">▶</span> Filter nach Tags</summary>
+      <div style="padding:12px;">
+        <div id="filter-chips"></div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn pink-ghost" id="btn-clear-filters">Filter zurücksetzen</button>
         </div>
-      </details>
-
-      <div id="recipe-list" class="grid"></div>
-    </section>
-
-    <!-- Produkte -->
-    <section id="view-products" style="display:none;">
-      <div class="card accent products">
-        <input id="search-products" type="search" placeholder="Produkte suchen…"/>
       </div>
-      <div id="product-list"></div>
-    </section>
+    </details>
 
-    <!-- Einkaufskorb -->
-    <section id="view-cart" style="display:none;">
-      <div class="card accent cart">
-        <div class="section-title">Einkaufskorb</div>
+    <details class="collapsible card" id="recipe-editor">
+      <summary><span class="chev">▶</span> Rezept-Editor <span class="muted">(klicken zum Öffnen/Schliessen)</span></summary>
+      <div id="editor-body" style="padding:12px;"></div>
+    </details>
 
-        <div class="row" style="gap:8px;">
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
-            <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
-            <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
-          </div>
+    <div id="recipe-list" class="grid"></div>
+  </section>
 
-          <div class="row row-2" style="align-items:end;">
-            <div>
-              <label class="muted">Store-Filter</label>
-              <select id="store-filter"></select>
-            </div>
-            <div></div>
-          </div>
+  <!-- Produkte -->
+  <section id="view-products" style="display:none;">
+    <div class="card accent products">
+      <div class="section-title">Produkte</div>
+      <div class="row row-2">
+        <input id="search-products" type="search" placeholder="Produkt suchen (z. B. Gurke, Tomate …)" aria-label="Produkte suchen">
+        <div class="right" style="display:flex; justify-content:flex-end">
+          <button type="button" id="btn-add-product-row" class="btn pink">+ Produkt hinzufügen</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:6px;">Kategorien sind eingeklappt. Menge & Einheit vor dem Hinzufügen wählbar.</div>
+    </div>
 
+    <div id="product-add" class="card" style="display:none;"></div>
+    <div id="product-list" class="grid" style="gap:8px;"></div>
+  </section>
+
+  <!-- Einkaufskorb -->
+  <section id="view-cart" style="display:none;">
+    <div class="card accent cart">
+      <div class="section-title">Einkaufskorb</div>
+
+      <div class="row" style="gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
+          <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
+          <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
+        </div>
+
+        <div class="row row-2" style="align-items:end;">
           <div>
-            <div class="muted">Markierte Artikel taggen mit:</div>
-            <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
-              <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags entfernen</button>
-            </div>
+            <label class="muted">Store-Filter</label>
+            <select id="store-filter"></select>
+          </div>
+          <div></div>
+        </div>
+
+        <div>
+          <div class="muted">Markierte Artikel taggen mit:</div>
+          <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+            <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags von markierten entfernen</button>
           </div>
         </div>
       </div>
-      <div id="cart-list"></div>
-    </section>
-  </main>
+    </div>
+    <div id="cart-list"></div>
+  </section>
+</main>
 
-  <div id="toast" class="toast"></div>
+<div id="toast" class="toast">Hinzugefügt</div>
 
-  <script src="data.js"></script>
-  <script src="ui.js"></script>
-  <script src="recipes.js"></script>
-  <script src="products.js"></script>
-  <script src="cart.js"></script>
-  <script src="main.js"></script>
+<!-- Scripts -->
+<script src="data.js"></script>
+<script src="ui.js"></script>
+<script src="cart.js"></script>
+<script src="recipes.js"></script>
+<script src="products.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
