@@ -200,3 +200,20 @@ label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
 input[type="checkbox"], input[type="radio"]{
   width:20px; height:20px;
 }
+
+/* === Autosuggest (Rezept-Zutaten) === */
+.suggest-wrap{ position:relative; }
+.suggest-box{
+  position:absolute; left:0; right:0; top:100%; z-index:50;
+  background:#fff; border:1px solid var(--border); border-top:none;
+  border-radius:0 0 12px 12px; box-shadow:var(--shadow);
+  max-height:220px; overflow:auto; display:none;
+}
+.suggest-item{
+  padding:10px 12px; cursor:pointer; display:flex; justify-content:space-between; gap:10px;
+}
+.suggest-item:hover{ background:#fff0f7; }
+.suggest-name{ font-weight:600; }
+.suggest-meta{ font-size:12px; color:var(--muted); white-space:nowrap; }
+.suggest-empty{ padding:10px 12px; color:var(--muted); }
+
