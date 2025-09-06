@@ -29,7 +29,6 @@
     if(tab==='products') window.Products.renderProducts();
     if(tab==='recipes') window.Recipes.renderRecipeList();
   }
-
   function wireTabs(){
     $('#tab-recipes').addEventListener('click',()=>switchTab('recipes'));
     $('#tab-products').addEventListener('click',()=>switchTab('products'));
@@ -38,7 +37,7 @@
 
   // Import / Export
   function exportAll(){
-    const data={version:5, exportedAt:new Date().toISOString(), recipes:window.AppData.recipes, products:window.AppData.products, cart:window.AppData.cart};
+    const data={version:6, exportedAt:new Date().toISOString(), recipes:window.AppData.recipes, products:window.AppData.products, cart:window.AppData.cart};
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
     a.download=`rezepte_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -73,7 +72,7 @@
   }
 
   function wireCartToolbar(){
-    // fix: distinct handlers
+    // distinct handlers
     $('#btn-clear-cart').addEventListener('click',()=>window.Cart.clearCart());
     $('#btn-uncheck-all').addEventListener('click',()=>window.Cart.uncheckAll());
     $('#btn-check-all').addEventListener('click',()=>window.Cart.checkAll());
@@ -89,13 +88,8 @@
     const sel = document.getElementById('store-filter'); sel.innerHTML='';
     sel.appendChild(new Option('Alle Stores',''));
     STORE_TAGS.forEach(s=>sel.appendChild(new Option(s,s)));
-    sel.value = window.Cart.getState().storeFilter || '';
-    sel.addEventListener('change',()=>window.Cart.setStoreFilter(sel.value));
-
-    // hide purchased toggle
-    const hideCb = document.getElementById('hide-purchased');
-    hideCb.checked = !!window.Cart.getState().hidePurchased;
-    hideCb.addEventListener('change',()=>window.Cart.setHidePurchased(hideCb.checked));
+    sel.value = window.Cart.getStoreFilter() || '';
+    sel.addEventListener('change',()=>window.Cart.applyStoreFilter(sel.value));
   }
 
   function init(){
