@@ -26,13 +26,22 @@
     }
   }
 
+  function cartIcon(){
+    const svg=`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d="M7 4h-2l-1 2M6 6h13l-1.5 9h-11L5 6m3 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 .001 1.999A1 1 0 0 0 16 19z"
+        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    return h('span',{class:'icon', html:svg});
+  }
+
   function productLine(it){
     const def = defaultQtyForProduct(it.name, it.cat);
     const line=h('div',{class:'card', style:'padding:10px; display:grid; grid-template-columns: 1fr auto auto auto; gap:8px; align-items:center;'});
     const name=h('div',{}, it.name, ' ', h('span',{class:'pill'},it.cat));
-    const amount=h('input',{type:'number', step:'any', inputmode:'decimal', value:def.amount, style:'width:100px;', 'aria-label':'Menge'});
+    const amount=h('input',{type:'number', step:'any', inputmode:'decimal', value:def.amount, style:'width:90px;', 'aria-label':'Menge'});
     const unit=(function(){ const s=h('select'); UNIT_OPTIONS.forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=def.unit; return s; })();
-    const addBtn=h('button',{type:'button',class:'btn pink small'},'+ in Korb');
+
+    const addBtn=h('button',{type:'button',class:'btn pink small', title:'In den Korb'}, cartIcon());
     addBtn.addEventListener('click',()=>{
       let v = amount.value? parseFloat(amount.value): null;
       let u = unit.value || def.unit;
@@ -41,6 +50,7 @@
       window.Cart.addToCart([{name:it.name, qty:qtyStr, cat:it.cat, addon:false}]);
       flash(line); toast(`${it.name} hinzugefügt`);
     });
+
     line.append(name, amount, unit, addBtn);
     return line;
   }
