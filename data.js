@@ -93,6 +93,542 @@
   };
 
   let recipes = store.load('recipes',[]);
+  // Seed: Nur wenn noch keine Rezepte gespeichert sind
+if (!recipes || recipes.length === 0) {
+  recipes = [
+    {
+      id: crypto.randomUUID(),
+      title: "Fajita mit Hähnchen",
+      ings: [
+        { name:"Hähnchenbrust", qty:"400 g", cat:"Fleisch/Fisch" },
+        { name:"Paprika rot", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Paprika gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Gurke", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Tomate", qty:"2 Stk", cat:"Gemüse" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Creme Fraiche", qty:"200 g", cat:"Milchprodukte" },
+        { name:"Ketchup", qty:"50 g", cat:"Saucen/Öle" },
+        { name:"Käse gerieben", qty:"120 g", cat:"Milchprodukte", optional:true },
+        { name:"Mais (Dose)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Avocado", qty:"1 Stk", cat:"Früchte" },
+        { name:"Granatapfelkerne", qty:"60 g", cat:"Früchte" },
+        { name:"Tortilla Wraps", qty:"6 Stk", cat:"Getreide/Backwaren" },
+        { name:"Tortilla Chips", qty:"100 g", cat:"Snacks" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Fleisch"], Küche:["Mexikanisch"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Quesadilla",
+      ings: [
+        { name:"Tortilla Wraps", qty:"4 Stk", cat:"Getreide/Backwaren" },
+        { name:"Käse gerieben", qty:"200 g", cat:"Milchprodukte" },
+        { name:"Paprika rot", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Tomate", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Mais (Dose)", qty:"0.5 Stk", cat:"Konserven" },
+        { name:"Zwiebel gelb", qty:"0.5 Stk", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Snack","Abendessen"], Ernährung:["Veggie"], Küche:["Mexikanisch"], Aufwand:["Schnell","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Bruschetta",
+      ings: [
+        { name:"Brot", qty:"6 Scheiben", cat:"Getreide/Backwaren" },
+        { name:"Tomate", qty:"3 Stk", cat:"Gemüse" },
+        { name:"Olivenöl", qty:"2 EL", cat:"Saucen/Öle" },
+        { name:"Balsamico", qty:"1 EL", cat:"Saucen/Öle", optional:true },
+        { name:"Knoblauch", qty:"1 Zehe", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Snack","Vorspeise"], Ernährung:["Veggie"], Küche:["Italienisch"], Aufwand:["Schnell","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Butter Chicken mit Reis & Naan",
+      ings: [
+        { name:"Hähnchenbrust", qty:"500 g", cat:"Fleisch/Fisch" },
+        { name:"Butter Chicken Sauce", qty:"1 Glas", cat:"Saucen/Öle" },
+        { name:"Reis", qty:"300 g", cat:"Getreide/Backwaren" },
+        // einfache Naan-Basis
+        { name:"Mehl Weiss", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Joghurt natur", qty:"150 g", cat:"Milchprodukte" },
+        { name:"Backpulver", qty:"1 Pck", cat:"Getreide/Backwaren" },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" },
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch"], Küche:["Indisch"], Aufwand:["Ofen","Pfanne","Meal Prep"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Reis Bowl",
+      ings: [
+        { name:"Reis", qty:"250 g", cat:"Getreide/Backwaren" },
+        { name:"Gurke", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Süsskartoffel", qty:"1 Stk", cat:"Gemüse", optional:true },
+        { name:"Avocado", qty:"1 Stk", cat:"Früchte", optional:true },
+        { name:"Edamame", qty:"150 g", cat:"Gemüse", optional:true },
+        { name:"Granatapfelkerne", qty:"60 g", cat:"Früchte", optional:true },
+        { name:"Hähnchenbrust", qty:"250 g", cat:"Fleisch/Fisch", optional:true },
+        { name:"Rindsgeschnetzeltes", qty:"250 g", cat:"Fleisch/Fisch", optional:true },
+        { name:"Mango", qty:"0.5 Stk", cat:"Früchte", optional:true }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie","Fleisch"], Küche:["Fusion"], Aufwand:["Meal Prep"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Nudeln mit Lachs und Rahmsauce",
+      ings: [
+        { name:"Pasta Spaghetti", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Lachs frisch", qty:"300 g", cat:"Fleisch/Fisch" },
+        { name:"Rahm/Sahne", qty:"200 ml", cat:"Milchprodukte" },
+        { name:"Zitrone", qty:"0.5 Stk", cat:"Früchte", optional:true },
+        { name:"Knoblauch", qty:"1 Zehe", cat:"Gemüse", optional:true },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Pescetarisch"], Küche:["Italienisch"], Aufwand:["Pfanne","Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Rührei",
+      ings: [
+        { name:"Eier", qty:"4 Stk", cat:"Milchprodukte" },
+        { name:"Butter", qty:"20 g", cat:"Milchprodukte" },
+        { name:"Milch", qty:"30 ml", cat:"Milchprodukte", optional:true },
+        { name:"Schnittlauch", qty:"1 Bund", cat:"Gemüse", optional:true }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Snack"], Ernährung:["Veggie","Proteinreich"], Aufwand:["Schnell","< 5 Zutaten","Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Ofenkartoffeln (Varianten)",
+      ings: [
+        { name:"Kartoffel festkochend", qty:"1 kg", cat:"Gemüse" },
+        { name:"Olivenöl", qty:"2 EL", cat:"Saucen/Öle" },
+        { name:"Paprikapulver edelsüss", qty:"1 TL", cat:"Gewürze" },
+        { name:"Karotte", qty:"3 Stk", cat:"Gemüse", optional:true },
+        { name:"Brokkoli", qty:"1 Stk", cat:"Gemüse", optional:true },
+        { name:"Blumenkohl", qty:"1 Stk", cat:"Gemüse", optional:true },
+        { name:"Hähnchenbrust", qty:"300 g", cat:"Fleisch/Fisch", optional:true },
+        { name:"Lachs frisch", qty:"300 g", cat:"Fleisch/Fisch", optional:true },
+        { name:"Veggie Nuggets", qty:"1 Pck", cat:"Tiefkühl", optional:true }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Veggie","Fleisch"], Küche:["Amerikanisch"], Aufwand:["Ofen","Meal Prep"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Creamy Feta Gnocchis in Tomatenrahm",
+      ings: [
+        { name:"Gnocchi", qty:"500 g", cat:"Getreide/Backwaren" },
+        { name:"Passata", qty:"400 ml", cat:"Konserven" },
+        { name:"Rahm/Sahne", qty:"150 ml", cat:"Milchprodukte" },
+        { name:"Feta", qty:"150 g", cat:"Milchprodukte" },
+        { name:"Knoblauch", qty:"1 Zehe", cat:"Gemüse", optional:true },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Veggie"], Küche:["Italienisch"], Aufwand:["Schnell","Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Creamy Pasta",
+      ings: [
+        { name:"Pasta Penne", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Rahm/Sahne", qty:"200 ml", cat:"Milchprodukte" },
+        { name:"Parmesan", qty:"60 g", cat:"Milchprodukte" },
+        { name:"Knoblauch", qty:"1 Zehe", cat:"Gemüse", optional:true },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Veggie"], Küche:["Italienisch"], Aufwand:["Schnell","< 5 Zutaten","Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Rösti mit Rahmsauce (ohne Pilze)",
+      ings: [
+        { name:"Rösti fixfertig (Beutel)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Rahm/Sahne", qty:"200 ml", cat:"Milchprodukte" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Butter", qty:"20 g", cat:"Milchprodukte" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie"], Küche:["Schweizerisch"], Aufwand:["Pfanne","Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Sandwich / Panini",
+      ings: [
+        { name:"Brot", qty:"4 Scheiben", cat:"Getreide/Backwaren" },
+        { name:"Tomate", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Mozzarella", qty:"1 Stk", cat:"Milchprodukte" },
+        { name:"Schinken", qty:"4 Scheiben", cat:"Fleisch/Fisch", optional:true },
+        { name:"Sucuk", qty:"120 g", cat:"Fleisch/Fisch", optional:true }
+      ],
+      tags:{ Mahlzeit:["Snack","Mittagessen"], Ernährung:["Veggie","Fleisch"], Küche:["Italienisch"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Nudelsalat Caprese",
+      ings: [
+        { name:"Pasta Fusilli", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Tomate", qty:"3 Stk", cat:"Gemüse" },
+        { name:"Mozzarella", qty:"2 Stk", cat:"Milchprodukte" },
+        { name:"Pesto grün", qty:"3 EL", cat:"Saucen/Öle" },
+        { name:"Pinienkerne", qty:"30 g", cat:"Snacks", optional:true }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie"], Küche:["Italienisch"], Aufwand:["Schnell","Meal Prep"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Caesar Salad",
+      ings: [
+        { name:"Römersalat", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Hähnchenbrust", qty:"300 g", cat:"Fleisch/Fisch", optional:true },
+        { name:"Parmesan", qty:"40 g", cat:"Milchprodukte" },
+        { name:"Croutons", qty:"1 Pck", cat:"Getreide/Backwaren", optional:true },
+        { name:"Mayonnaise", qty:"2 EL", cat:"Saucen/Öle" },
+        { name:"Zitronensaft", qty:"1 EL", cat:"Früchte" },
+        { name:"Knoblauch", qty:"1 Zehe", cat:"Gemüse", optional:true }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie","Fleisch"], Küche:["Amerikanisch"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Guacamole-Toast mit Tomaten",
+      ings: [
+        { name:"Brot", qty:"2 Scheiben", cat:"Getreide/Backwaren" },
+        { name:"Avocado", qty:"1 Stk", cat:"Früchte" },
+        { name:"Tomate", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Limette", qty:"0.5 Stk", cat:"Früchte", optional:true }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Snack"], Ernährung:["Veggie","Gesund"], Küche:["Mexikanisch"], Aufwand:["Schnell","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Chicken Pad Thai",
+      ings: [
+        { name:"Reisnudeln", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Hähnchenbrust", qty:"300 g", cat:"Fleisch/Fisch" },
+        { name:"Sojasauce", qty:"3 EL", cat:"Saucen/Öle" },
+        { name:"Limette", qty:"1 Stk", cat:"Früchte" },
+        { name:"Eier", qty:"2 Stk", cat:"Milchprodukte" },
+        { name:"Frühlingszwiebel", qty:"1 Bund", cat:"Gemüse" },
+        { name:"Erdnüsse", qty:"40 g", cat:"Snacks" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch"], Küche:["Asiatisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Smoothie Bowl (Ninja Creamy)",
+      ings: [
+        { name:"TK-Beerenmix", qty:"300 g", cat:"Tiefkühl" },
+        { name:"Skyr", qty:"250 g", cat:"Milchprodukte" },
+        { name:"Banane", qty:"1 Stk", cat:"Früchte" },
+        { name:"Haferflocken", qty:"40 g", cat:"Getreide/Backwaren", optional:true }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Snack"], Ernährung:["Gesund","Proteinreich","Veggie"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Sticky Salmon Bites mit Reis",
+      ings: [
+        { name:"Lachs frisch", qty:"400 g", cat:"Fleisch/Fisch" },
+        { name:"Reis", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Sojasauce", qty:"3 EL", cat:"Saucen/Öle" },
+        { name:"Sriracha", qty:"1 EL", cat:"Saucen/Öle", optional:true },
+        { name:"Honig", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Pescetarisch","Proteinreich"], Küche:["Asiatisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Burger mit Salat",
+      ings: [
+        { name:"Brötchen", qty:"4 Stk", cat:"Getreide/Backwaren" },
+        { name:"Rindhack", qty:"500 g", cat:"Fleisch/Fisch" },
+        { name:"Salat (Kopf)", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Tomate", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Käse Gouda", qty:"4 Scheiben", cat:"Milchprodukte", optional:true },
+        { name:"Ketchup", qty:"2 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch"], Küche:["Amerikanisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Pizza mit Speckstreifen und Mais",
+      ings: [
+        { name:"Pizzateig", qty:"1 Stk", cat:"Getreide/Backwaren" },
+        { name:"Passata", qty:"200 ml", cat:"Konserven" },
+        { name:"Mozzarella", qty:"1 Stk", cat:"Milchprodukte" },
+        { name:"Speckwürfel", qty:"100 g", cat:"Fleisch/Fisch" },
+        { name:"Mais (Dose)", qty:"0.5 Stk", cat:"Konserven" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch"], Küche:["Italienisch"], Aufwand:["Ofen"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Crispy Kartoffelsalat",
+      ings: [
+        { name:"Kartoffel festkochend", qty:"1 kg", cat:"Gemüse" },
+        { name:"Olivenöl", qty:"2 EL", cat:"Saucen/Öle" },
+        { name:"Balsamico", qty:"1 EL", cat:"Saucen/Öle" },
+        { name:"Schnittlauch", qty:"1 Bund", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Beilage","Mittagessen"], Ernährung:["Veggie","Gesund"], Küche:["Mediterran"], Aufwand:["Ofen"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Burrito Bowl mit Süsskartoffeln",
+      ings: [
+        { name:"Reis", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Süsskartoffel", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Mais (Dose)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Avocado", qty:"1 Stk", cat:"Früchte", optional:true },
+        { name:"Tomate", qty:"2 Stk", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie"], Küche:["Mexikanisch"], Aufwand:["Meal Prep"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Tortellini-Auflauf",
+      ings: [
+        { name:"Tortellini", qty:"500 g", cat:"Getreide/Backwaren" },
+        { name:"Passata", qty:"400 ml", cat:"Konserven" },
+        { name:"Mozzarella", qty:"1 Stk", cat:"Milchprodukte" },
+        { name:"Parmesan", qty:"40 g", cat:"Milchprodukte" },
+        { name:"Rahm/Sahne", qty:"100 ml", cat:"Milchprodukte", optional:true }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Veggie"], Küche:["Italienisch"], Aufwand:["Ofen"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Crispy Chickpeas Salat",
+      ings: [
+        { name:"Kichererbsen (Dose)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Römersalat", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Gurke", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Tomate", qty:"2 Stk", cat:"Gemüse" },
+        { name:"Olivenöl", qty:"2 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen"], Ernährung:["Vegan","Gesund"], Küche:["Mediterran"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Crispy Reis Salat",
+      ings: [
+        { name:"Reis", qty:"250 g", cat:"Getreide/Backwaren" },
+        { name:"Edamame", qty:"150 g", cat:"Gemüse", optional:true },
+        { name:"Gurke", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Avocado", qty:"1 Stk", cat:"Früchte", optional:true },
+        { name:"Granatapfelkerne", qty:"60 g", cat:"Früchte", optional:true }
+      ],
+      tags:{ Mahlzeit:["Mittagessen"], Ernährung:["Veggie","Vegan"], Küche:["Fusion"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Gebratener Reis mit Ei",
+      ings: [
+        { name:"Reis", qty:"300 g", cat:"Getreide/Backwaren" },
+        { name:"Eier", qty:"3 Stk", cat:"Milchprodukte" },
+        { name:"Frühlingszwiebel", qty:"1 Bund", cat:"Gemüse" },
+        { name:"Karotte", qty:"2 Stk", cat:"Gemüse" },
+        { name:"TK-Erbsen", qty:"150 g", cat:"Tiefkühl" },
+        { name:"Sojasauce", qty:"2 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie","Proteinreich"], Küche:["Asiatisch"], Aufwand:["Pfanne","Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Steak mit Kartoffeln oder Reis",
+      ings: [
+        { name:"Rindsteak", qty:"2 Stk", cat:"Fleisch/Fisch" },
+        { name:"Kartoffel festkochend", qty:"800 g", cat:"Gemüse", optional:true },
+        { name:"Reis", qty:"250 g", cat:"Getreide/Backwaren", optional:true },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch","Proteinreich"], Küche:["International"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Salat mit Ei",
+      ings: [
+        { name:"Salat (Kopf)", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Eier", qty:"3 Stk", cat:"Milchprodukte" },
+        { name:"Tomate", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Gurke", qty:"0.5 Stk", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen"], Ernährung:["Veggie","Proteinreich"], Küche:["International"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Gözleme mit Spinat",
+      ings: [
+        { name:"Pita", qty:"2 Stk", cat:"Getreide/Backwaren" },
+        { name:"Spinat", qty:"300 g", cat:"Gemüse" },
+        { name:"Feta", qty:"150 g", cat:"Milchprodukte" },
+        { name:"Zwiebel gelb", qty:"0.5 Stk", cat:"Gemüse", optional:true }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Veggie"], Küche:["Orientalisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Creamy Protein Eis (Schoko)",
+      ings: [
+        { name:"Skyr", qty:"250 g", cat:"Milchprodukte" },
+        { name:"Kakaopulver", qty:"2 EL", cat:"Snacks" },
+        { name:"Banane", qty:"1 Stk", cat:"Früchte" }
+      ],
+      tags:{ Mahlzeit:["Snack","Dessert"], Ernährung:["Gesund","Proteinreich"], Aufwand:["Schnell","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Kaiserschmarrn",
+      ings: [
+        { name:"Mehl Weiss", qty:"200 g", cat:"Getreide/Backwaren" },
+        { name:"Milch", qty:"250 ml", cat:"Milchprodukte" },
+        { name:"Eier", qty:"3 Stk", cat:"Milchprodukte" },
+        { name:"Butter", qty:"20 g", cat:"Milchprodukte" },
+        { name:"Zucker", qty:"2 EL", cat:"Snacks" }
+      ],
+      tags:{ Mahlzeit:["Dessert","Snack"], Ernährung:["Veggie"], Küche:["Österreichisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Teriyaki Chicken Summer Rolls",
+      ings: [
+        { name:"Reispapier", qty:"10 Stk", cat:"Getreide/Backwaren" },
+        { name:"Hähnchenbrust", qty:"300 g", cat:"Fleisch/Fisch" },
+        { name:"Teriyaki Sauce", qty:"4 EL", cat:"Saucen/Öle" },
+        { name:"Gurke", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Karotte", qty:"2 Stk", cat:"Gemüse" },
+        { name:"Salat (Kopf)", qty:"0.5 Stk", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Mittagessen","Abendessen"], Ernährung:["Fleisch"], Küche:["Asiatisch"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Caprese Salat",
+      ings: [
+        { name:"Tomate", qty:"3 Stk", cat:"Gemüse" },
+        { name:"Mozzarella", qty:"2 Stk", cat:"Milchprodukte" },
+        { name:"Basilikum getrocknet", qty:"1 TL", cat:"Gewürze" },
+        { name:"Olivenöl", qty:"1 EL", cat:"Saucen/Öle" }
+      ],
+      tags:{ Mahlzeit:["Vorspeise","Mittagessen"], Ernährung:["Veggie","Gesund"], Küche:["Italienisch"], Aufwand:["Schnell","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Mais in Butter angebraten",
+      ings: [
+        { name:"Mais (Dose)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Butter", qty:"20 g", cat:"Milchprodukte" }
+      ],
+      tags:{ Mahlzeit:["Beilage","Snack"], Ernährung:["Veggie"], Aufwand:["Schnell","< 5 Zutaten","Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Waffeln mit Ahornsirup/Früchten",
+      ings: [
+        { name:"Mehl Weiss", qty:"200 g", cat:"Getreide/Backwaren" },
+        { name:"Milch", qty:"250 ml", cat:"Milchprodukte" },
+        { name:"Eier", qty:"2 Stk", cat:"Milchprodukte" },
+        { name:"Butter", qty:"40 g", cat:"Milchprodukte" },
+        { name:"Ahornsirup", qty:"nach Bedarf", cat:"Snacks" },
+        { name:"Beerenmix", qty:"150 g", cat:"Früchte", optional:true }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Dessert"], Ernährung:["Veggie"], Küche:["International"], Aufwand:["Ofen"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Flammkuchen mit Speck, Käse, Creme Fraiche, Zwiebeln",
+      ings: [
+        { name:"Flammkuchenteig", qty:"1 Stk", cat:"Getreide/Backwaren" },
+        { name:"Creme Fraiche", qty:"200 g", cat:"Milchprodukte" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Speckwürfel", qty:"100 g", cat:"Fleisch/Fisch" },
+        { name:"Käse gerieben", qty:"100 g", cat:"Milchprodukte" }
+      ],
+      tags:{ Mahlzeit:["Abendessen"], Ernährung:["Fleisch"], Küche:["Französisch"], Aufwand:["Ofen"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Kürbissuppe mit Karotten & Zwiebeln",
+      ings: [
+        { name:"Kürbis Hokkaido", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Karotte", qty:"3 Stk", cat:"Gemüse" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Rahm/Sahne", qty:"100 ml", cat:"Milchprodukte", optional:true },
+        { name:"Gemüsebouillon", qty:"1 Würfel", cat:"Gewürze" }
+      ],
+      tags:{ Mahlzeit:["Abendessen","Vorspeise"], Ernährung:["Veggie","Gesund"], Küche:["International"], Aufwand:["Topf"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Brokkoli-Cremesuppe",
+      ings: [
+        { name:"Brokkoli", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Rahm/Sahne", qty:"150 ml", cat:"Milchprodukte", optional:true },
+        { name:"Gemüsebouillon", qty:"1 Würfel", cat:"Gewürze" }
+      ],
+      tags:{ Mahlzeit:["Abendessen","Vorspeise"], Ernährung:["Veggie","Gesund"], Küche:["International"], Aufwand:["Topf","< 5 Zutaten"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Kokos-Curry-Suppe",
+      ings: [
+        { name:"Kokosmilch (Dose)", qty:"1 Stk", cat:"Konserven" },
+        { name:"Currypulver", qty:"1 TL", cat:"Gewürze" },
+        { name:"Gemüsebouillon", qty:"1 Würfel", cat:"Gewürze" },
+        { name:"Karotte", qty:"2 Stk", cat:"Gemüse" }
+      ],
+      tags:{ Mahlzeit:["Abendessen","Vorspeise"], Ernährung:["Vegan","Gesund"], Küche:["Asiatisch"], Aufwand:["Topf"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Flädlesuppe",
+      ings: [
+        { name:"Pfannkuchen/Crêpe", qty:"2 Stk", cat:"Getreide/Backwaren" },
+        { name:"Gemüsebouillon", qty:"500 ml", cat:"Gewürze" },
+        { name:"Schnittlauch", qty:"1 Bund", cat:"Gemüse", optional:true }
+      ],
+      tags:{ Mahlzeit:["Vorspeise","Snack"], Ernährung:["Veggie"], Küche:["Schweizerisch"], Aufwand:["Schnell"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Crêpe",
+      ings: [
+        { name:"Mehl Weiss", qty:"200 g", cat:"Getreide/Backwaren" },
+        { name:"Milch", qty:"400 ml", cat:"Milchprodukte" },
+        { name:"Eier", qty:"3 Stk", cat:"Milchprodukte" },
+        { name:"Butter", qty:"20 g", cat:"Milchprodukte" }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Dessert"], Ernährung:["Veggie"], Küche:["Französisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Menemen mit Sucuk (opt.)",
+      ings: [
+        { name:"Eier", qty:"3 Stk", cat:"Milchprodukte" },
+        { name:"Tomate", qty:"2 Stk", cat:"Gemüse" },
+        { name:"Paprika grün", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Zwiebel gelb", qty:"0.5 Stk", cat:"Gemüse" },
+        { name:"Sucuk", qty:"120 g", cat:"Fleisch/Fisch", optional:true }
+      ],
+      tags:{ Mahlzeit:["Frühstück","Mittagessen"], Ernährung:["Veggie","Fleisch"], Küche:["Orientalisch"], Aufwand:["Pfanne"] }
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Blumenkohlsuppe",
+      ings: [
+        { name:"Blumenkohl", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Zwiebel gelb", qty:"1 Stk", cat:"Gemüse" },
+        { name:"Rahm/Sahne", qty:"100 ml", cat:"Milchprodukte", optional:true },
+        { name:"Gemüsebouillon", qty:"1 Würfel", cat:"Gewürze" }
+      ],
+      tags:{ Mahlzeit:["Abendessen","Vorspeise"], Ernährung:["Veggie","Gesund"], Küche:["International"], Aufwand:["Topf"] }
+    }
+  ];
+
+  // Nach dem Seed gleich speichern
+  store.save('recipes', recipes);
+}
+
   let cart    = store.load('cart',[]);
   let products= store.load('products',null);
 
