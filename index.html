@@ -1,218 +1,32 @@
-<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Rezepte • Produkte • Einkaufskorb</title>
+<!-- Nur der geänderte Ausschnitt im Warenkorb-Header -->
+<section id="view-cart" style="display:none;">
+  <div class="card accent cart">
+    <div class="section-title">Einkaufskorb</div>
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ff74b8">
+    <div class="row" style="gap:8px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
+        <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
+        <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
+      </div>
 
-<style>
-  :root{
-    --bg-1:#ffeef6; --bg-2:#fff6fb; --card:#fff;
-    --text:#2f2330; --muted:#7f6576; --border:#f3d7e6;
-    --pink:#ff74b8; --pink-2:#ff9ad1; --cart:#ff9a1e;
-    --radius:18px; --shadow:0 8px 24px rgba(175,78,129,.15);
-    --pad:14px; --focus:0 0 0 3px rgba(255,116,184,.25);
-    --flash:#d1ffea; --flash-border:#22c55e;
-  }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-  html,body{ height:100% } body{
-    margin:0;
-    background:
-      radial-gradient(1000px 700px at 15% -10%, var(--bg-2), transparent 60%),
-      radial-gradient(900px 600px at 110% 0%, #ffe3f1, transparent 55%),
-      var(--bg-1);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    color:var(--text);
-  }
+      <!-- NUR Store-Filter bleibt -->
+      <div class="row row-2" style="align-items:end;">
+        <div>
+          <label class="muted">Store-Filter</label>
+          <select id="store-filter"></select>
+        </div>
+        <div><!-- leer gelassen, damit Layout gleich bleibt --></div>
+      </div>
 
-  header{ position:sticky; top:0; z-index:30; backdrop-filter:blur(8px);
-    background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.6));
-    border-bottom:1px solid var(--border);}
-  .container{ max-width:1000px; margin:0 auto; padding:12px 16px;}
-  .title-row{ display:flex; align-items:center; gap:10px;}
-  .logo{ width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
-    background:#ffd3ea; color:#7c2a59; font-weight:900; box-shadow:0 6px 18px rgba(255,105,180,.25);}
-  h1{ margin:0; font-size:18px; letter-spacing:.3px}
-
-  .tabs{ display:flex; gap:10px; margin-top:10px;}
-  .tab{ flex:1; padding:12px; border-radius:12px; border:1px solid var(--border);
-    background:#fff; color:var(--text); cursor:pointer; transition:.15s; box-shadow:var(--shadow); font-weight:700;}
-  .tab:hover{ transform:translateY(-1px)}
-  .tab.active[data-tab="recipes"]{ border-color:var(--pink); color:var(--pink);}
-  .tab.active[data-tab="products"]{ border-color:#ffb0df; color:#d9489a;}
-  .tab.active[data-tab="cart"]{ border-color:var(--cart); color:#b25c00;}
-
-  main{ max-width:1000px; margin:16px auto; padding:0 16px 120px;}
-  .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:var(--pad); box-shadow:var(--shadow); margin-bottom:12px;}
-  .section-title{ font-weight:800; margin:4px 0 8px;}
-  .muted{ color:var(--muted) }
-  .grid{ display:grid; gap:12px } @media (min-width:760px){ .grid-2{ grid-template-columns:1fr 1fr } }
-  .row{ display:grid; gap:10px } .row-2{ grid-template-columns:1fr 1fr }
-  .right{ margin-left:auto }
-
-  .btn{ appearance:none; border:1px solid var(--border); border-radius:12px; background:#fff;
-    color:#2f2330; padding:12px 14px; cursor:pointer; transition:.15s;
-    box-shadow:0 6px 16px rgba(175,78,129,.12); font-weight:700; line-height:1; touch-action: manipulation; }
-  .btn:focus-visible{ outline:none; box-shadow:var(--focus) }
-  .btn:hover{ transform:translateY(-1px)}
-  .btn.pink{ border-color:var(--pink); color:#fff; background:var(--pink);}
-  .btn.pink-ghost{ background:#fff; border-color:var(--pink-2); color:#b0307d;}
-  .btn.orange{ border-color:var(--cart); color:#7c2a00; background:#ffd39a;}
-  .btn.neutral{ background:#fff; border-color:var(--border); color:#2f2330;}
-  .btn.small{ padding:10px 12px; border-radius:10px; font-size:14px}
-  .btn.icon{ width:40px; height:40px; display:grid; place-items:center; padding:0;}
-  .btn.icon.small{ width:34px; height:34px;}
-
-  input[type="text"], input[type="url"], input[type="search"], input[type="number"], textarea, select{
-    width:100%; padding:12px; border-radius:12px; border:1px solid var(--border);
-    background:#fff; color:var(--text); outline:none; font-size:16px;}
-  input:focus, textarea:focus, select:focus{ box-shadow:var(--focus); border-color:var(--pink-2) }
-  textarea{ min-height:100px }
-
-  .pill{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--muted); background:#fff }
-  .pill .x{ cursor:pointer; font-weight:900; color:#b0307d; }
-
-  .chip{ padding:6px 10px; border-radius:999px; border:1px solid #ffc1df; background:#fff; color:#2f2330; font-size:12px; cursor:pointer }
-  .chip.small{ padding:4px 8px; font-size:11px }
-
-  .checkline{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border) }
-
-  .accent.recipes{ border-left:4px solid var(--pink); padding-left:10px; background:#fff0f7 }
-  .accent.products{ border-left:4px solid #ffb0df; padding-left:10px; background:#fff4fb }
-  .accent.cart{ border-left:4px solid var(--cart); padding-left:10px; background:#fff6e6 }
-
-  details.collapsible{ border:1px dashed var(--border); border-radius:16px; overflow:hidden; background:#fff }
-  details.collapsible[open] summary{ border-bottom:1px dashed var(--border) }
-  summary{ list-style:none; cursor:pointer; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-  summary::-webkit-details-marker{ display:none }
-  .chev{ transition:.15s } details[open] .chev{ transform:rotate(90deg) }
-
-  .img-glow{ box-shadow:0 10px 24px rgba(255,105,180,.12); border:1px solid var(--border); border-radius:14px }
-
-  @keyframes flashAdd { 0%{background:#fff;border-color:var(--border)} 20%{background:var(--flash);border-color:var(--flash-border)} 100%{background:#fff;border-color:var(--border)} }
-  .flash { animation: flashAdd .9s ease-out; }
-  .toast { position: fixed; z-index: 2000; left: 50%; transform: translateX(-50%); bottom: 18px; background: #111827; color: #fff; font-weight: 700; padding: 10px 14px; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.25); display:none; }
-</style>
-</head>
-<body>
-<header>
-  <div class="container">
-    <div class="title-row">
-      <div class="logo" aria-hidden="true">♡</div>
-      <h1>Rezepte • Produkte • Einkaufskorb</h1>
-      <span class="right"></span>
-    </div>
-    <div class="tabs">
-      <button type="button" class="tab active" data-tab="recipes" id="tab-recipes">Rezepte</button>
-      <button type="button" class="tab" data-tab="products" id="tab-products">Produkte</button>
-      <button type="button" class="tab" data-tab="cart" id="tab-cart">Einkaufskorb</button>
+      <div>
+        <div class="muted">Markierte Artikel taggen mit:</div>
+        <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+          <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags von markierten entfernen</button>
+        </div>
+      </div>
     </div>
   </div>
-</header>
-
-<main>
-  <!-- Rezepte -->
-  <section id="view-recipes">
-    <div class="card accent recipes">
-      <div class="row" style="gap:8px;">
-        <div class="section-title">Rezepte</div>
-        <div class="row row-2">
-          <input id="search-recipes" type="search" placeholder="Rezepte oder Zutaten suchen …" aria-label="Rezepte suchen">
-          <div class="right" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
-            <input id="import-file" type="file" accept="application/json" style="display:none">
-            <button type="button" class="btn neutral" id="btn-import">Import</button>
-            <button type="button" class="btn neutral" id="btn-export">Export</button>
-            <button type="button" id="toggle-editor" class="btn pink">+ Neues Rezept</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <details class="collapsible card" id="recipe-filters">
-      <summary><span class="chev">▶</span> Filter nach Tags</summary>
-      <div style="padding:12px;">
-        <div id="filter-chips"></div>
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn pink-ghost" id="btn-clear-filters">Filter zurücksetzen</button>
-        </div>
-      </div>
-    </details>
-
-    <details class="collapsible card" id="recipe-editor">
-      <summary><span class="chev">▶</span> Rezept-Editor <span class="muted">(klicken zum Öffnen/Schliessen)</span></summary>
-      <div id="editor-body" style="padding:12px;"></div>
-    </details>
-
-    <div id="recipe-list" class="grid"></div>
-  </section>
-
-  <!-- Produkte -->
-  <section id="view-products" style="display:none;">
-    <div class="card accent products">
-      <div class="section-title">Produkte</div>
-      <div class="row row-2">
-        <input id="search-products" type="search" placeholder="Produkt suchen (z. B. Gurke, Tomate …)" aria-label="Produkte suchen">
-        <div class="right" style="display:flex; justify-content:flex-end">
-          <button type="button" id="btn-add-product-row" class="btn pink">+ Produkt hinzufügen</button>
-        </div>
-      </div>
-      <div class="muted" style="margin-top:6px;">Kategorie einklappen • Menge & Einheit vor dem Hinzufügen wählbar.</div>
-    </div>
-
-    <div id="product-add" class="card" style="display:none;"></div>
-    <div id="product-list" class="grid" style="gap:8px;"></div>
-  </section>
-
-  <!-- Einkaufskorb -->
-  <section id="view-cart" style="display:none;">
-    <div class="card accent cart">
-      <div class="section-title">Einkaufskorb</div>
-
-      <div class="row" style="gap:8px;">
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
-          <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
-          <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
-        </div>
-        <div class="row row-2" style="align-items:end;">
-          <div>
-            <label class="muted">Store-Filter</label>
-            <select id="store-filter"></select>
-          </div>
-          <div>
-            <label class="muted">Ansicht</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <label style="display:flex; gap:8px; align-items:center;">
-                <input id="hide-purchased" type="checkbox"> Gekauft ausblenden
-              </label>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="muted">Markierte Artikel taggen mit:</div>
-          <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
-            <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags von markierten entfernen</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="cart-list"></div>
-  </section>
-</main>
-
-<div id="toast" class="toast">Hinzugefügt</div>
-
-<script src="data.js"></script>
-<script src="ui.js"></script>
-<script src="cart.js"></script>
-<script src="recipes.js"></script>
-<script src="products.js"></script>
-<script src="main.js"></script>
-</body>
-</html>
+  <div id="cart-list"></div>
+</section>
