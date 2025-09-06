@@ -1,6 +1,6 @@
 // recipes.js
 (function(){
-  const {CATS, TAG_CATEGORIES, products, store, recipes, norm, UNIT_OPTIONS, defaultUnitForCategory, parseQty, ensureQtyObject} = window.AppData;
+  const {CATS, TAG_CATEGORIES, products, store, recipes, norm, UNIT_OPTIONS, defaultUnitForCategory, unitHintForName, parseQty, ensureQtyObject} = window.AppData;
   const { $, h, toast } = window.UI;
 
   const selectedFilters=Object.fromEntries(Object.keys(TAG_CATEGORIES).map(k=>[k,new Set()]));
@@ -68,10 +68,10 @@
 
     function guessFromProduct(name){
       const prod = products.find(p=>norm(p.name)===norm(name));
-      if(prod){
-        catSel.value = prod.cat;
-        if(!unitSel.value){ unitSel.value = defaultUnitForCategory(prod.cat); }
-      }
+      if(prod) catSel.value = prod.cat;
+      const hint = unitHintForName(name);
+      if(hint){ unitSel.value = hint.unit; if(!qtyInput.value) qtyInput.value = hint.amount; }
+      else if(prod && !unitSel.value){ unitSel.value = defaultUnitForCategory(prod.cat); }
     }
     nameInput.addEventListener('change',()=>guessFromProduct(nameInput.value));
     nameInput.addEventListener('input',()=>guessFromProduct(nameInput.value));
@@ -243,8 +243,8 @@
       h('button',{type:'button',class:'btn pink',onclick:()=>{
         const chosen = Array.from(list.querySelectorAll('input[type="checkbox"]')).map((cb,i)=>cb.checked?opts[i]:null).filter(Boolean);
         const selected = [];
-        base.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat}); selected.push({...i, qty:ensured.qtyStr, addon:false});});
-        chosen.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat}); selected.push({...i, qty:ensured.qtyStr, addon:true});});
+        base.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat, name:i.name}); selected.push({...i, qty:ensured.qtyStr, addon:false});});
+        chosen.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat, name:i.name}); selected.push({...i, qty:ensured.qtyStr, addon:true});});
         window.Cart.addToCart(selected, r); overlay.remove(); toast('Zum Korb hinzugefügt');
       }},'In den Korb')
     );
@@ -253,5 +253,5 @@
     document.body.appendChild(overlay);
   }
 
-  window.Recipes = { buildEditor, ingredientRow, renderTagPickers, renderFilterChips, renderRecipeList, deleteRecipe, editRecipe, openAddDialog };
+  window.Recipes = { buildEditor, renderTagPickers, renderFilterChips, renderRecipeList, deleteRecipe, editRecipe, openAddDialog };
 })();
