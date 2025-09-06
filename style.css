@@ -1,0 +1,190 @@
+/* ===============================
+   Rezepte & Einkauf – Style (iOS-friendly, girly pink, clean)
+   =============================== */
+
+:root{
+  --bg-1:#ffeef6;
+  --bg-2:#fff6fb;
+  --card:#ffffff;
+  --text:#2f2330;
+  --muted:#7f6576;
+  --border:#f3d7e6;
+
+  --pink:#ff74b8;      /* kräftig für Buttons */
+  --pink-2:#ff9ad1;    /* Sekundär */
+  --cart:#ff9a1e;      /* Orange für Einkaufskorb-CTAs */
+
+  --radius:18px;
+  --shadow:0 8px 24px rgba(175,78,129,.12);
+  --focus:0 0 0 3px rgba(255,116,184,.28);
+
+  --flash:#d1ffea;
+  --flash-border:#22c55e;
+}
+
+/* ===== Base ===== */
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100% }
+body{
+  margin:0;
+  background:
+    radial-gradient(1000px 700px at 15% -10%, var(--bg-2), transparent 60%),
+    radial-gradient(900px 600px at 110% 0%, #ffe3f1, transparent 55%),
+    var(--bg-1);
+  color:var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+img{ max-width:100%; display:block }
+
+/* ===== Header & Tabs ===== */
+header{
+  position:sticky; top:0; z-index:30;
+  backdrop-filter:blur(8px);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.6));
+  border-bottom:1px solid var(--border);
+  padding:12px 16px;
+}
+header h1{
+  margin:0 0 10px 0; font-size:18px; letter-spacing:.3px; font-weight:800;
+}
+
+.tabs{ display:flex; gap:10px; }
+.tab{
+  flex:1; padding:12px; border-radius:12px;
+  border:1px solid var(--border); background:#fff; color:var(--text);
+  cursor:pointer; transition:transform .12s ease;
+  box-shadow:var(--shadow); font-weight:800;
+}
+.tab:hover{ transform:translateY(-1px) }
+.tab.active[data-tab="recipes"]{ border-color:var(--pink); color:var(--pink); }
+.tab.active[data-tab="products"]{ border-color:#ffb0df; color:#d9489a; }
+.tab.active[data-tab="cart"]{ border-color:var(--cart); color:#b25c00; }
+
+/* ===== Layout ===== */
+main{ max-width:1000px; margin:16px auto; padding:0 16px 120px; }
+.grid{ display:grid; gap:12px; }
+@media (min-width:760px){ .row-2{ grid-template-columns:1fr 1fr; } }
+.row{ display:grid; gap:10px; }
+.right{ margin-left:auto; }
+
+.card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+  margin-bottom:12px;
+}
+.section-title{ font-weight:800; margin:4px 0 8px; }
+.muted{ color:var(--muted); }
+
+/* subtle accents per Bereich */
+.accent.recipes{ border-left:4px solid var(--pink); padding-left:10px; background:#fff0f7; }
+.accent.products{ border-left:4px solid #ffb0df; padding-left:10px; background:#fff4fb; }
+.accent.cart{ border-left:4px solid var(--cart); padding-left:10px; background:#fff6e6; }
+
+/* ===== Controls ===== */
+button, input, select, textarea{ font:inherit; }
+.btn{
+  appearance:none; border:1px solid var(--border); border-radius:12px;
+  background:#fff; color:#2f2330; padding:12px 14px; line-height:1;
+  cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+  box-shadow:0 6px 16px rgba(175,78,129,.10); font-weight:800;
+  touch-action:manipulation;
+}
+.btn:hover{ transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); }
+.btn:focus-visible{ outline:none; box-shadow:var(--focus); }
+.btn.small{ padding:10px 12px; border-radius:10px; font-size:14px; }
+.btn.icon{ width:40px; height:40px; display:grid; place-items:center; padding:0; }
+.btn.icon.small{ width:34px; height:34px; }
+
+.btn.pink{ border-color:var(--pink); background:var(--pink); color:#fff; }
+.btn.pink-ghost{ border-color:var(--pink-2); background:#fff; color:#b0307d; }
+.btn.orange{ border-color:var(--cart); background:#ffd39a; color:#7c2a00; }
+.btn.neutral{ border-color:var(--border); background:#fff; color:#2f2330; }
+
+/* Inputs */
+input[type="text"], input[type="url"], input[type="search"], input[type="number"], textarea, select{
+  width:100%; padding:12px; border-radius:12px; border:1px solid var(--border);
+  background:#fff; color:var(--text); outline:none; font-size:16px;
+}
+input:focus, textarea:focus, select:focus{ box-shadow:var(--focus); border-color:var(--pink-2); }
+textarea{ min-height:100px; resize:vertical; }
+
+/* Pills & Chips */
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid var(--border); border-radius:999px;
+  padding:4px 10px; font-size:12px; color:var(--muted); background:#fff;
+}
+.pill .x{ cursor:pointer; font-weight:900; color:#b0307d; }
+
+.chip{
+  padding:6px 10px; border-radius:999px; border:1px solid #ffc1df;
+  background:#fff; color:#2f2330; font-size:12px; cursor:pointer; user-select:none;
+}
+.chip.small{ padding:4px 8px; font-size:11px; }
+.chip.active{ background:#ffe0f0; border-color:var(--pink); color:#b0307d; }
+
+/* Einkaufsposten-Zeile */
+.checkline{
+  display:flex; align-items:center; gap:10px;
+  padding:8px 0; border-bottom:1px dashed var(--border);
+}
+
+/* Collapsible / Details */
+details.collapsible{
+  border:1px dashed var(--border); border-radius:16px; overflow:hidden; background:#fff;
+}
+details.collapsible[open] summary{ border-bottom:1px dashed var(--border); }
+summary{
+  list-style:none; cursor:pointer; padding:10px 12px;
+  display:flex; align-items:center; gap:10px; user-select:none;
+}
+summary::-webkit-details-marker{ display:none; }
+.chev{ transition:transform .15s ease; }
+details[open] .chev{ transform:rotate(90deg); }
+
+/* Images */
+.img-glow{
+  box-shadow:0 10px 24px rgba(255,105,180,.12);
+  border:1px solid var(--border); border-radius:14px;
+}
+
+/* Feedback / Animations */
+@keyframes flashAdd{
+  0%{ background:#fff; border-color:var(--border); }
+  20%{ background:var(--flash); border-color:var(--flash-border); }
+  100%{ background:#fff; border-color:var(--border); }
+}
+.flash{ animation:flashAdd .9s ease-out; }
+
+.toast{
+  position:fixed; z-index:2000; left:50%; transform:translateX(-50%);
+  bottom:18px; background:#111827; color:#fff; font-weight:800;
+  padding:10px 14px; border-radius:999px; box-shadow:0 8px 24px rgba(0,0,0,.25);
+  display:none;
+}
+
+/* ===== Mobile tweaks ===== */
+@media (hover:none){
+  .btn:hover{ transform:none; }
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; transition:none !important; }
+  .chev{ transition:none; }
+}
+
+/* Accessibility helpers */
+button:disabled, .btn:disabled{
+  opacity:.6; cursor:not-allowed; transform:none;
+}
+label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
+
+/* Make small hit targets easier on touch */
+input[type="checkbox"], input[type="radio"]{
+  width:20px; height:20px;
+}
