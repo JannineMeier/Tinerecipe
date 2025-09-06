@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Rezepte • Produkte • Einkaufskorb</title>
 
-<!-- PWA / iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ff74b8">
@@ -56,9 +55,8 @@
   .row{ display:grid; gap:10px } .row-2{ grid-template-columns:1fr 1fr }
   .right{ margin-left:auto }
 
-  /* Buttons */
   .btn{ appearance:none; border:1px solid var(--border); border-radius:12px; background:#fff;
-    color:var(--text); padding:12px 14px; cursor:pointer; transition:.15s;
+    color:#2f2330; padding:12px 14px; cursor:pointer; transition:.15s;
     box-shadow:0 6px 16px rgba(175,78,129,.12); font-weight:700; line-height:1; touch-action: manipulation; }
   .btn:focus-visible{ outline:none; box-shadow:var(--focus) }
   .btn:hover{ transform:translateY(-1px)}
@@ -76,7 +74,9 @@
   input:focus, textarea:focus, select:focus{ box-shadow:var(--focus); border-color:var(--pink-2) }
   textarea{ min-height:100px }
 
-  .pill{ display:inline-block; border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--muted); background:#fff }
+  .pill{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--muted); background:#fff }
+  .pill .x{ cursor:pointer; font-weight:900; color:#b0307d; }
+
   .chip{ padding:6px 10px; border-radius:999px; border:1px solid #ffc1df; background:#fff; color:#2f2330; font-size:12px; cursor:pointer }
   .chip.small{ padding:4px 8px; font-size:11px }
 
@@ -94,7 +94,6 @@
 
   .img-glow{ box-shadow:0 10px 24px rgba(255,105,180,.12); border:1px solid var(--border); border-radius:14px }
 
-  /* Feedback */
   @keyframes flashAdd { 0%{background:#fff;border-color:var(--border)} 20%{background:var(--flash);border-color:var(--flash-border)} 100%{background:#fff;border-color:var(--border)} }
   .flash { animation: flashAdd .9s ease-out; }
   .toast { position: fixed; z-index: 2000; left: 50%; transform: translateX(-50%); bottom: 18px; background: #111827; color: #fff; font-weight: 700; padding: 10px 14px; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.25); display:none; }
@@ -173,21 +172,34 @@
   <section id="view-cart" style="display:none;">
     <div class="card accent cart">
       <div class="section-title">Einkaufskorb</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
-        <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
-        <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
-        <span class="right"></span>
-      </div>
 
-      <!-- Store-Tagging -->
-      <div class="row" style="margin-top:10px;">
-        <div class="muted">Markierte Artikel taggen mit:</div>
-        <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
-          <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags von markierten entfernen</button>
+      <div class="row" style="gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn neutral" id="btn-check-all">Alle anhaken</button>
+          <button type="button" class="btn neutral" id="btn-uncheck-all">Alle abhaken</button>
+          <button type="button" class="btn orange" id="btn-clear-cart">Korb leeren</button>
         </div>
-        <div class="info">Tipp: Haken = markiert. Tagging wirkt auf alle markierten Artikel.</div>
+        <div class="row row-2" style="align-items:end;">
+          <div>
+            <label class="muted">Store-Filter</label>
+            <select id="store-filter"></select>
+          </div>
+          <div>
+            <label class="muted">Ansicht</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <label style="display:flex; gap:8px; align-items:center;">
+                <input id="hide-purchased" type="checkbox"> Gekauft ausblenden
+              </label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="muted">Markierte Artikel taggen mit:</div>
+          <div id="store-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+            <button type="button" class="btn neutral" id="btn-clear-tags-selected">Tags von markierten entfernen</button>
+          </div>
+        </div>
       </div>
     </div>
     <div id="cart-list"></div>
@@ -196,7 +208,6 @@
 
 <div id="toast" class="toast">Hinzugefügt</div>
 
-<!-- Scripts -->
 <script src="data.js"></script>
 <script src="ui.js"></script>
 <script src="cart.js"></script>
