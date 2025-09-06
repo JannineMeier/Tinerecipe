@@ -1,6 +1,10 @@
 // recipes.js
 (function(){
-  const {CATS, TAG_CATEGORIES, products, store, recipes, norm, UNIT_OPTIONS, defaultUnitForCategory, unitHintForName, parseQty, ensureQtyObject} = window.AppData;
+  const {
+    CATS, TAG_CATEGORIES, products, store,
+    recipes, norm, UNIT_OPTIONS,
+    defaultUnitForCategory, unitHintForName, parseQty, ensureQtyObject
+  } = window.AppData;
   const { $, h, toast } = window.UI;
 
   const selectedFilters=Object.fromEntries(Object.keys(TAG_CATEGORIES).map(k=>[k,new Set()]));
@@ -47,37 +51,96 @@
     const r=new FileReader(); r.onload=()=>{ photoData=r.result; prev.src=photoData; prev.style.display='block' }; r.readAsDataURL(f);
   }
 
+  // === AUTOSUGGEST ===
+  function attachSuggest(nameInput, unitSel, catSel, qtyInput){
+    // Wrapper für Positionierung
+    const wrap=document.createElement('div');
+    wrap.className='suggest-wrap';
+    nameInput.parentElement.insertBefore(wrap, nameInput);
+    wrap.appendChild(nameInput);
+
+    const box=document.createElement('div');
+    box.className='suggest-box';
+    wrap.appendChild(box);
+
+    let hideTimer=null;
+    function open(){ box.style.display='block'; }
+    function close(){ box.style.display='none'; }
+    function fill(list){
+      box.innerHTML='';
+      if(!list.length){ box.appendChild(h('div',{class:'suggest-empty'},'Keine Treffer')); return; }
+      list.slice(0,8).forEach(p=>{
+        const def = window.AppData.defaultQtyForProduct(p.name, p.cat);
+        const item=h('div',{class:'suggest-item', onclick:()=>apply(p)}, 
+          h('span',{class:'suggest-name'}, p.name),
+          h('span',{class:'suggest-meta'}, `${def.amount} ${def.unit || ''} • ${p.cat}`)
+        );
+        box.appendChild(item);
+      });
+    }
+    function search(q){
+      const s=norm(q);
+      if(!s){ close(); return; }
+      const list = window.AppData.products
+        .filter(p=>norm(p.name).includes(s))
+      // priorisiere startsWith
+        .sort((a,b)=>{
+          const as=norm(a.name).startsWith(s)?0:1;
+          const bs=norm(b.name).startsWith(s)?0:1;
+          if(as!==bs) return as-bs;
+          return a.name.localeCompare(b.name,'de');
+        });
+      if(list.length){ fill(list); open(); } else { close(); }
+    }
+    function apply(prod){
+      nameInput.value = prod.name;
+      // Kategorie & Einheit/Menge setzen
+      catSel.value = prod.cat;
+      const hint = unitHintForName(prod.name);
+      if(hint){ unitSel.value = hint.unit; qtyInput.value = hint.amount; }
+      else { const def=defaultUnitForCategory(prod.cat); unitSel.value=def; if(!qtyInput.value) qtyInput.value=window.AppData.defaultAmountForUnit(def); }
+      close();
+      nameInput.blur(); // iOS: Keyboard zu
+    }
+
+    nameInput.addEventListener('input', ()=>search(nameInput.value));
+    nameInput.addEventListener('focus', ()=>search(nameInput.value));
+    nameInput.addEventListener('blur', ()=>{ hideTimer=setTimeout(close, 150); }); // Zeit fürs Tippen
+    box.addEventListener('mousedown', (e)=>{ e.preventDefault(); clearTimeout(hideTimer); }); // Klick erlaubt
+  }
+
   function ingredientRow(data={}){
-    const rowId = crypto.randomUUID();
-    const datalistId = `dl-${rowId}`;
     const row=h('div',{class:'row',style:'align-items:end; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; border-bottom:1px dashed var(--border); padding-bottom:8px;'});
 
-    const nameInput=h('input',{type:'text', list:datalistId, placeholder:'z. B. Tomate', value:data.name||''});
-    const dl=h('datalist',{id:datalistId});
-    Array.from(new Set(products.map(p=>p.name))).sort((a,b)=>a.localeCompare(b,'de')).forEach(n=>dl.appendChild(h('option',{value:n})));
+    // Name + Autosuggest
+    const nameInput=h('input',{type:'text', placeholder:'z. B. Tomate', value:data.name||''});
+    const nameField=h('div',{}, h('label',{class:'muted'},'Zutat'), nameInput);
 
-    const qtyInput=h('input',{type:'number', step:'any', inputmode:'decimal', placeholder:'z. B. 200', value:data.amount||''});
+    const qtyInput=h('input',{type:'number', step:'any', inputmode:'decimal', placeholder:'z. B. 2', value:data.amount||''});
     const unitSel=(function(){ const s=h('select'); UNIT_OPTIONS.forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=data.unit||""; return s; })();
     const catSel=(function(){ const s=h('select'); window.AppData.CATS.forEach(c=>s.appendChild(h('option',{value:c},c))); s.value=data.cat||'Sonstiges'; return s; })();
 
     const optWrap=h('label',{class:'muted',style:'display:flex;align-items:center;gap:6px;'},
       h('input',{type:'checkbox',checked:!!data.optional}), ' add-on'
-    ); // default off
+    );
 
     const del=h('button',{type:'button',class:'btn neutral small',onclick:()=>row.remove()},'✕');
 
+    // Suggest aktivieren
+    attachSuggest(nameInput, unitSel, catSel, qtyInput);
+
+    // Falls man ohne Vorschlag tippt → trotzdem sinnvolle Defaults ziehen
     function guessFromProduct(name){
       const prod = products.find(p=>norm(p.name)===norm(name));
       if(prod) catSel.value = prod.cat;
       const hint = unitHintForName(name);
       if(hint){ unitSel.value = hint.unit; if(!qtyInput.value) qtyInput.value = hint.amount; }
-      else if(prod && !unitSel.value){ unitSel.value = defaultUnitForCategory(prod.cat); }
+      else if(prod && !unitSel.value){ const u=defaultUnitForCategory(prod.cat); unitSel.value=u; if(!qtyInput.value) qtyInput.value=window.AppData.defaultAmountForUnit(u); }
     }
     nameInput.addEventListener('change',()=>guessFromProduct(nameInput.value));
-    nameInput.addEventListener('input',()=>guessFromProduct(nameInput.value));
 
     row.append(
-      h('div',{}, h('label',{class:'muted'},'Zutat'), nameInput, dl),
+      nameField,
       h('div',{}, h('label',{class:'muted'},'Menge'), qtyInput),
       h('div',{}, h('label',{class:'muted'},'Einheit'), unitSel),
       h('div',{}, h('label',{class:'muted'},'Kategorie'), catSel),
@@ -96,12 +159,13 @@
     if(rows.length===0){ alert('Bitte mindestens eine Zutat hinzufügen'); return; }
 
     const ings = rows.map(row=>{
-      const [nameIn, qtyIn, unitSel, catSel, optInput] = row.querySelectorAll('input, select');
-      const name = nameIn.value.trim();
-      const amount = qtyIn.value ? String(qtyIn.value).trim() : '';
-      const unit = unitSel.value;
-      const cat = catSel.value;
-      const optional = optInput.checked;
+      const fields = row.querySelectorAll('input, select');
+      // Reihenfolge: nameInput, qtyInput, unitSel, catSel, optionalCheckbox
+      const name = fields[0].value.trim();
+      const amount = fields[1].value ? String(fields[1].value).trim() : '';
+      const unit = fields[2].value;
+      const cat = fields[3].value;
+      const optional = fields[4].checked;
       const qty = amount ? (unit ? `${amount} ${unit}` : amount) : '';
       return { name, qty, cat, optional, amount, unit };
     }).filter(x=>x.name);
@@ -114,6 +178,7 @@
 
   function resetForm(){ photoData=null; buildEditor(); }
 
+  // --- Tags (wie gehabt) ---
   function renderTagPickers(existing=null){
     const wrap=document.getElementById('tag-pickers'); wrap.innerHTML='';
     for(const [cat,tags] of Object.entries(TAG_CATEGORIES)){
@@ -153,7 +218,7 @@
       box.append(h4,chips); host.append(box);
     }
     $('#btn-clear-filters').addEventListener('click',()=>{
-      Object.values(selectedFilters).forEach(set=>set.clear());
+      Object.values(selectedFilters).forEach(s=>s.clear());
       renderFilterChips(); renderRecipeList();
     });
   }
@@ -213,7 +278,8 @@
     if(r.img){ photoData=r.img; const prev=$('#r-photo-preview'); prev.src=r.img; prev.style.display='block'; }
     const host=$('#ingredients');
     r.ings.forEach(i=>{
-      const q=parseQty(i.qty||''); host.appendChild(ingredientRow({name:i.name, amount:q.value ?? '', unit:q.unit ?? '', cat:i.cat, optional:!!i.optional}));
+      const q=parseQty(i.qty||'');
+      host.appendChild(ingredientRow({name:i.name, amount:q.value ?? '', unit:q.unit ?? '', cat:i.cat, optional:!!i.optional}));
     });
     renderTagPickers(r.tags||null); window.scrollTo({top:0,behavior:'smooth'});
   }
