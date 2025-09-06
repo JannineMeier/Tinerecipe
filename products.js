@@ -1,6 +1,6 @@
 // products.js
 (function(){
-  const {CATS, AISLE_ORDER, store, products, UNIT_OPTIONS, defaultUnitForCategory, defaultAmountForUnit} = window.AppData;
+  const {CATS, AISLE_ORDER, store, products, UNIT_OPTIONS, defaultQtyForProduct} = window.AppData;
   const { $, h, toast, flash } = window.UI;
 
   function buildAddProductForm(){
@@ -27,16 +27,16 @@
   }
 
   function productLine(it){
-    const defU=defaultUnitForCategory(it.cat); const defA=defaultAmountForUnit(defU);
+    const def = defaultQtyForProduct(it.name, it.cat);
     const line=h('div',{class:'card', style:'padding:10px; display:grid; grid-template-columns: 1fr auto auto auto; gap:8px; align-items:center;'});
     const name=h('div',{}, it.name, ' ', h('span',{class:'pill'},it.cat));
-    const amount=h('input',{type:'number', step:'any', inputmode:'decimal', value:defA, style:'width:100px;', 'aria-label':'Menge'});
-    const unit=(function(){ const s=h('select'); UNIT_OPTIONS.forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=defU; return s; })();
+    const amount=h('input',{type:'number', step:'any', inputmode:'decimal', value:def.amount, style:'width:100px;', 'aria-label':'Menge'});
+    const unit=(function(){ const s=h('select'); UNIT_OPTIONS.forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=def.unit; return s; })();
     const addBtn=h('button',{type:'button',class:'btn pink small'},'+ in Korb');
     addBtn.addEventListener('click',()=>{
       let v = amount.value? parseFloat(amount.value): null;
-      let u = unit.value || defU;
-      if(v==null || isNaN(v)) v = defaultAmountForUnit(u);
+      let u = unit.value || def.unit;
+      if(v==null || isNaN(v)) v = def.amount;
       const qtyStr = window.AppData.formatQty(v,u);
       window.Cart.addToCart([{name:it.name, qty:qtyStr, cat:it.cat, addon:false}]);
       flash(line); toast(`${it.name} hinzugefügt`);
