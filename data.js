@@ -629,6 +629,78 @@ if (!recipes || recipes.length === 0) {
   store.save('recipes', recipes);
 }
 
+  // --- Grundzutaten je Rezepttitel festlegen und alle anderen Zutaten als add-on markieren ---
+(function(){
+  // Map: Rezepttitel -> Liste der fixen Grundzutaten (per Name; Case-insensitive, enthält Teiltreffer)
+  const CORE_INGS = {
+    "Fajita mit Hähnchen": ["Hähnchenbrust","Paprika","Tortilla"],
+    "Quesadilla": ["Tortilla","Käse"],
+    "Bruschetta": ["Brot","Tomate","Olivenöl"],
+    "Butter Chicken": ["Hähnchen","Butter Chicken Sauce","Reis","Mehl","Joghurt","Backpulver"], // Naan basics auch fix
+    "Reis Bowl": ["Reis","Gurke"],
+    "Nudeln mit Lachs": ["Pasta","Lachs","Rahm","Sahne"],
+    "Rührei": ["Eier","Butter"],
+    "Ofenkartoffeln": ["Kartoffel","Olivenöl"],
+    "Creamy Feta Gnocchi": ["Gnocchi","Passata","Rahm","Sahne","Feta"],
+    "Creamy Pasta": ["Pasta","Rahm","Sahne","Parmesan"],
+    "Rösti mit Rahmsauce": ["Rösti","Rahm","Sahne","Zwiebel","Butter"],
+    "Sandwich": ["Brot"],
+    "Panini": ["Brot"],
+    "Nudelsalat": ["Pasta","Tomate","Mozzarella","Pesto"],
+    "Caesar Salad": ["Römersalat","Parmesan"],
+    "Guacamole-Toast": ["Brot","Avocado","Tomate"],
+    "Chicken Pad Thai": ["Reisnudeln","Hähnchen","Sojasauce","Eier"],
+    "Smoothie Bowl": ["TK-Beeren","Skyr","Banane"],
+    "Sticky Salmon Bites": ["Lachs","Reis","Sojasauce"],
+    "Burger": ["Brötchen","Rindhack","Salat","Tomate"],
+    "Pizza": ["Pizzateig","Passata","Mozzarella"],
+    "Crispy Kartoffelsalat": ["Kartoffel","Olivenöl","Balsamico"],
+    "Burrito Bowl": ["Reis","Süsskartoffel","Mais"],
+    "Tortellini-Auflauf": ["Tortellini","Passata","Mozzarella"],
+    "Crispy Chickpeas Salat": ["Kichererbsen","Römersalat"],
+    "Crispy Reis Salat": ["Reis","Gurke"],
+    "Gebratener Reis mit Ei": ["Reis","Eier","Karotte","Erbsen","Sojasauce"],
+    "Steak": ["Rindsteak"],
+    "Salat mit Ei": ["Salat","Eier","Tomate"],
+    "Gözleme": ["Pita","Spinat","Feta"],
+    "Creamy Protein Eis": ["Skyr","Kakaopulver","Banane"],
+    "Kaiserschmarrn": ["Mehl","Milch","Eier"],
+    "Teriyaki Chicken Summer Rolls": ["Reispapier","Hähnchen","Teriyaki","Gurke","Karotte","Salat"],
+    "Caprese": ["Tomate","Mozzarella","Basilikum","Olivenöl"],
+    "Mais in Butter": ["Mais","Butter"],
+    "Waffeln": ["Mehl","Milch","Eier","Butter"],
+    "Flammkuchen": ["Flammkuchenteig","Creme Fraiche","Zwiebel"],
+    "Kürbissuppe": ["Kürbis","Karotte","Zwiebel","Bouillon"],
+    "Brokkoli-Cremesuppe": ["Brokkoli","Zwiebel","Bouillon"],
+    "Kokos-Curry-Suppe": ["Kokosmilch","Currypulver","Bouillon","Karotte"],
+    "Flädlesuppe": ["Bouillon","Pfannkuchen","Crêpe"],
+    "Crêpe": ["Mehl","Milch","Eier"],
+    "Menemen": ["Eier","Tomate","Paprika","Zwiebel"],
+    "Blumenkohlsuppe": ["Blumenkohl","Zwiebel","Bouillon"]
+  };
+
+  function markOptionalsForRecipe(rec){
+    const cores = CORE_INGS[Object.keys(CORE_INGS).find(k => rec.title.toLowerCase().includes(k.toLowerCase()))] || null;
+    if(!Array.isArray(rec.ings)) return rec;
+    if(!cores){ 
+      // Fallback: lasse existierende optional-Werte wie sie sind
+      return rec;
+    }
+    const normalizedCores = cores.map(s=>s.toLowerCase());
+    rec.ings = rec.ings.map(ing=>{
+      const nm = (ing.name||'').toLowerCase();
+      const isCore = normalizedCores.some(core => nm.includes(core));
+      return {...ing, optional: !isCore ? true : false};
+    });
+    return rec;
+  }
+
+  // anwenden auf geladene/seeded Rezepte
+  window.AppData.recipes = (window.AppData.recipes||[]).map(markOptionalsForRecipe);
+  store.save('recipes', window.AppData.recipes);
+})();
+
+
   let cart    = store.load('cart',[]);
   let products= store.load('products',null);
 
