@@ -53,7 +53,6 @@
 
   // === AUTOSUGGEST ===
   function attachSuggest(nameInput, unitSel, catSel, qtyInput){
-    // Wrapper für Positionierung
     const wrap=document.createElement('div');
     wrap.className='suggest-wrap';
     nameInput.parentElement.insertBefore(wrap, nameInput);
@@ -83,7 +82,6 @@
       if(!s){ close(); return; }
       const list = window.AppData.products
         .filter(p=>norm(p.name).includes(s))
-      // priorisiere startsWith
         .sort((a,b)=>{
           const as=norm(a.name).startsWith(s)?0:1;
           const bs=norm(b.name).startsWith(s)?0:1;
@@ -94,25 +92,23 @@
     }
     function apply(prod){
       nameInput.value = prod.name;
-      // Kategorie & Einheit/Menge setzen
       catSel.value = prod.cat;
-      const hint = unitHintForName(prod.name);
+      const hint = window.AppData.unitHintForName(prod.name);
       if(hint){ unitSel.value = hint.unit; qtyInput.value = hint.amount; }
-      else { const def=defaultUnitForCategory(prod.cat); unitSel.value=def; if(!qtyInput.value) qtyInput.value=window.AppData.defaultAmountForUnit(def); }
+      else { const u=window.AppData.defaultUnitForCategory(prod.cat); unitSel.value=u; if(!qtyInput.value) qtyInput.value=window.AppData.defaultAmountForUnit(u); }
       close();
-      nameInput.blur(); // iOS: Keyboard zu
+      nameInput.blur();
     }
 
     nameInput.addEventListener('input', ()=>search(nameInput.value));
     nameInput.addEventListener('focus', ()=>search(nameInput.value));
-    nameInput.addEventListener('blur', ()=>{ hideTimer=setTimeout(close, 150); }); // Zeit fürs Tippen
-    box.addEventListener('mousedown', (e)=>{ e.preventDefault(); clearTimeout(hideTimer); }); // Klick erlaubt
+    nameInput.addEventListener('blur', ()=>{ hideTimer=setTimeout(close, 150); });
+    box.addEventListener('mousedown', (e)=>{ e.preventDefault(); clearTimeout(hideTimer); });
   }
 
   function ingredientRow(data={}){
     const row=h('div',{class:'row',style:'align-items:end; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; border-bottom:1px dashed var(--border); padding-bottom:8px;'});
 
-    // Name + Autosuggest
     const nameInput=h('input',{type:'text', placeholder:'z. B. Tomate', value:data.name||''});
     const nameField=h('div',{}, h('label',{class:'muted'},'Zutat'), nameInput);
 
@@ -126,10 +122,8 @@
 
     const del=h('button',{type:'button',class:'btn neutral small',onclick:()=>row.remove()},'✕');
 
-    // Suggest aktivieren
     attachSuggest(nameInput, unitSel, catSel, qtyInput);
 
-    // Falls man ohne Vorschlag tippt → trotzdem sinnvolle Defaults ziehen
     function guessFromProduct(name){
       const prod = products.find(p=>norm(p.name)===norm(name));
       if(prod) catSel.value = prod.cat;
@@ -160,7 +154,6 @@
 
     const ings = rows.map(row=>{
       const fields = row.querySelectorAll('input, select');
-      // Reihenfolge: nameInput, qtyInput, unitSel, catSel, optionalCheckbox
       const name = fields[0].value.trim();
       const amount = fields[1].value ? String(fields[1].value).trim() : '';
       const unit = fields[2].value;
@@ -178,7 +171,7 @@
 
   function resetForm(){ photoData=null; buildEditor(); }
 
-  // --- Tags (wie gehabt) ---
+  // --- Tags ---
   function renderTagPickers(existing=null){
     const wrap=document.getElementById('tag-pickers'); wrap.innerHTML='';
     for(const [cat,tags] of Object.entries(TAG_CATEGORIES)){
@@ -202,27 +195,6 @@
     }); return result;
   }
 
-  function renderFilterChips(){
-    const host=document.getElementById('filter-chips'); host.innerHTML='';
-    for(const [cat,tags] of Object.entries(TAG_CATEGORIES)){
-      const box=h('div',{class:'tag-group'}); const h4=h('h4',{},cat); const chips=h('div',{class:'chips'});
-      tags.forEach(t=>{
-        const chip=h('button',{type:'button',class:'chip small'},t);
-        if(selectedFilters[cat].has(t)) chip.classList.add('active');
-        chip.addEventListener('click',()=>{
-          if(selectedFilters[cat].has(t)) selectedFilters[cat].delete(t); else selectedFilters[cat].add(t);
-          chip.classList.toggle('active'); renderRecipeList();
-        });
-        chips.appendChild(chip);
-      });
-      box.append(h4,chips); host.append(box);
-    }
-    $('#btn-clear-filters').addEventListener('click',()=>{
-      Object.values(selectedFilters).forEach(s=>s.clear());
-      renderFilterChips(); renderRecipeList();
-    });
-  }
-
   function matchRecipe(r,q){
     const s=(q||'').trim().toLowerCase();
     if(s && !(r.title.toLowerCase().includes(s) || (r.ings&&r.ings.some(i=>i.name.toLowerCase().includes(s))))) return false;
@@ -233,30 +205,39 @@
     return true;
   }
 
+  // === Collapsible Recipe Card ===
   function recipeCard(r){
-    const card=h('div',{class:'card'});
-    if(r.img) card.appendChild(h('img',{src:r.img,class:'img-glow',style:'width:100%; max-height:220px; object-fit:cover; margin-bottom:8px'}));
-    card.append(
-      h('div',{class:'row'}, h('div',{class:'section-title'},r.title), r.link?h('a',{href:r.link,target:'_blank',class:'muted'},'Link öffnen ↗'):h('span',{class:'muted'},'')),
+    const det=h('details',{class:'collapsible card'});
+    const summary=h('summary',{}, h('span',{class:'chev'},'▶'), ' ', h('strong',{}, r.title));
+    det.appendChild(summary);
+
+    const body=h('div',{style:'padding:10px;display:grid;gap:8px;'});
+    if(r.img) body.appendChild(h('img',{src:r.img,class:'img-glow',style:'width:100%; max-height:220px; object-fit:cover;'}));
+
+    body.append(
       h('div',{}, h('h3',{},'Zutaten'),
         ...r.ings.filter(i=>!i.optional).map(i=>h('div',{class:'checkline'},`• ${i.name}`,i.qty?` — ${i.qty}`:'',' ',h('span',{class:'pill'},i.cat))),
-        r.ings.some(i=>i.optional)?h('div',{},...r.ings.filter(i=>i.optional).map(i=>h('span',{class:'pill',style:'margin-right:6px;'},i.name+' • add-on'))):null
+        r.ings.some(i=>i.optional)?h('div',{},h('div',{class:'muted',style:'margin:6px 0 0;'},'Add-ons:'), ...r.ings.filter(i=>i.optional).map(i=>h('span',{class:'pill',style:'margin:4px 6px 0 0;'},i.name+(i.qty?` • ${i.qty}`:'')))):null
       ),
       r.steps?h('div',{},h('h3',{},'Anleitung'),h('div',{},r.steps)):null
     );
+
     if(r.tags && Object.keys(r.tags).length){
-      const tagWrap=h('div',{style:'display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;'});
+      const tagWrap=h('div',{style:'display:flex; flex-wrap:wrap; gap:6px;'});
       for(const [cat,list] of Object.entries(r.tags)){ list.forEach(t=>tagWrap.appendChild(h('span',{class:'chip small',style:'background:#ffe0f0;border-color:#ff74b8;color:#b0307d'},`${cat}: ${t}`))); }
-      card.appendChild(tagWrap);
+      body.appendChild(tagWrap);
     }
-    card.appendChild(
-      h('div',{style:'display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;'},
+
+    body.appendChild(
+      h('div',{style:'display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;'},
         h('button',{type:'button',class:'btn pink',onclick:()=>openAddDialog(r.id)},'Zum Einkaufskorb'),
         h('button',{type:'button',class:'btn pink-ghost',onclick:()=>editRecipe(r.id)},'Bearbeiten'),
         h('button',{type:'button',class:'btn neutral',onclick:()=>deleteRecipe(r.id)},'Löschen')
       )
     );
-    return card;
+
+    det.appendChild(body);
+    return det;
   }
 
   function renderRecipeList(){
