@@ -4,14 +4,37 @@
     CATS, TAG_CATEGORIES, products, store,
     recipes, norm, UNIT_OPTIONS,
     defaultUnitForCategory, unitHintForName, parseQty, ensureQtyObject
-  } = window.AppData;
-  const { $, h, toast } = window.UI;
+  } = window.AppData || {};
+  const UI = window.UI || {};
+  const $ = UI.$ || (sel => document.querySelector(sel));
+  const h = UI.h || ((tag, props={}, ...children) => {
+    const el = document.createElement(tag);
+    Object.entries(props||{}).forEach(([k,v])=>{
+      if(k==='class') el.className=v;
+      else if(k==='style') el.setAttribute('style', v);
+      else if(k.startsWith('on') && typeof v==='function') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k,v);
+    });
+    children.flat().filter(Boolean).forEach(c=>{
+      if(typeof c==='string' || typeof c==='number') el.appendChild(document.createTextNode(c));
+      else el.appendChild(c);
+    });
+    return el;
+  });
+  const toast = UI.toast || (msg=>{ try{console.log('[toast]',msg);}catch{} });
+
+  // Wenn AppData nicht geladen wurde, früh abbrechen
+  if(!window.AppData){
+    console.error('AppData not available. Ensure data.js is loaded before recipes.js');
+    return;
+  }
 
   const selectedFilters=Object.fromEntries(Object.keys(TAG_CATEGORIES).map(k=>[k,new Set()]));
   let photoData=null;
 
   function buildEditor(){
     const body = $('#editor-body');
+    if(!body) return;
     body.innerHTML='';
 
     const rowTop = h('div',{class:'row row-2'},
@@ -35,7 +58,7 @@
 
     const tagsBox = h('div',{}, h('div',{class:'section-title',style:'margin-top:12px;'},'Tags'), h('div',{id:'tag-pickers',class:'card',style:'background:#fff'}));
 
-    const actions = h('div',{style:'display:flex; gap:8px; margin-top:12px;'},
+    const actions = h('div',{style:'display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;'},
       h('button',{type:'button',class:'btn pink', id:'btn-save-recipe', onclick:saveRecipe},'Rezept speichern'),
       h('button',{type:'button',class:'btn neutral', id:'btn-reset-form', onclick:resetForm},'Formular leeren')
     );
@@ -47,8 +70,8 @@
 
   function handlePhoto(e){
     const f=e.target.files&&e.target.files[0]; const prev=$('#r-photo-preview');
-    if(!f){ photoData=null; prev.style.display='none'; return; }
-    const r=new FileReader(); r.onload=()=>{ photoData=r.result; prev.src=photoData; prev.style.display='block' }; r.readAsDataURL(f);
+    if(!f){ photoData=null; if(prev) prev.style.display='none'; return; }
+    const r=new FileReader(); r.onload=()=>{ photoData=r.result; if(prev){ prev.src=photoData; prev.style.display='block'; } }; r.readAsDataURL(f);
   }
 
   // === AUTOSUGGEST ===
@@ -60,9 +83,10 @@
 
     const box=document.createElement('div');
     box.className='suggest-box';
+    box.style.display='none';
     wrap.appendChild(box);
 
-    let hideTimer=null;
+    let closeTimer=null;
     function open(){ box.style.display='block'; }
     function close(){ box.style.display='none'; }
     function fill(list){
@@ -70,7 +94,7 @@
       if(!list.length){ box.appendChild(h('div',{class:'suggest-empty'},'Keine Treffer')); return; }
       list.slice(0,8).forEach(p=>{
         const def = window.AppData.defaultQtyForProduct(p.name, p.cat);
-        const item=h('div',{class:'suggest-item', onclick:()=>apply(p)}, 
+        const item=h('div',{class:'suggest-item', onclick:()=>apply(p)},
           h('span',{class:'suggest-name'}, p.name),
           h('span',{class:'suggest-meta'}, `${def.amount} ${def.unit || ''} • ${p.cat}`)
         );
@@ -80,7 +104,7 @@
     function search(q){
       const s=norm(q);
       if(!s){ close(); return; }
-      const list = window.AppData.products
+      const list = (window.AppData.products||[])
         .filter(p=>norm(p.name).includes(s))
         .sort((a,b)=>{
           const as=norm(a.name).startsWith(s)?0:1;
@@ -97,13 +121,15 @@
       if(hint){ unitSel.value = hint.unit; qtyInput.value = hint.amount; }
       else { const u=window.AppData.defaultUnitForCategory(prod.cat); unitSel.value=u; if(!qtyInput.value) qtyInput.value=window.AppData.defaultAmountForUnit(u); }
       close();
+      // iOS: on-screen keyboard schließen
       nameInput.blur();
     }
 
     nameInput.addEventListener('input', ()=>search(nameInput.value));
     nameInput.addEventListener('focus', ()=>search(nameInput.value));
-    nameInput.addEventListener('blur', ()=>{ hideTimer=setTimeout(close, 150); });
-    box.addEventListener('mousedown', (e)=>{ e.preventDefault(); clearTimeout(hideTimer); });
+    nameInput.addEventListener('blur', ()=>{ closeTimer=setTimeout(close, 150); });
+    box.addEventListener('mousedown', (e)=>{ e.preventDefault(); clearTimeout(closeTimer); });
+    box.addEventListener('touchstart', (e)=>{ e.preventDefault(); clearTimeout(closeTimer); }, {passive:false});
   }
 
   function ingredientRow(data={}){
@@ -113,8 +139,8 @@
     const nameField=h('div',{}, h('label',{class:'muted'},'Zutat'), nameInput);
 
     const qtyInput=h('input',{type:'number', step:'any', inputmode:'decimal', placeholder:'z. B. 2', value:data.amount||''});
-    const unitSel=(function(){ const s=h('select'); UNIT_OPTIONS.forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=data.unit||""; return s; })();
-    const catSel=(function(){ const s=h('select'); window.AppData.CATS.forEach(c=>s.appendChild(h('option',{value:c},c))); s.value=data.cat||'Sonstiges'; return s; })();
+    const unitSel=(function(){ const s=h('select'); (UNIT_OPTIONS||[]).forEach(u=>s.appendChild(h('option',{value:u},u||'—'))); s.value=data.unit||""; return s; })();
+    const catSel=(function(){ const s=h('select'); (window.AppData.CATS||[]).forEach(c=>s.appendChild(h('option',{value:c},c))); s.value=data.cat||'Sonstiges'; return s; })();
 
     const optWrap=h('label',{class:'muted',style:'display:flex;align-items:center;gap:6px;'},
       h('input',{type:'checkbox',checked:!!data.optional}), ' add-on'
@@ -125,7 +151,8 @@
     attachSuggest(nameInput, unitSel, catSel, qtyInput);
 
     function guessFromProduct(name){
-      const prod = products.find(p=>norm(p.name)===norm(name));
+      const arr = window.AppData.products||[];
+      const prod = arr.find(p=>norm(p.name)===norm(name));
       if(prod) catSel.value = prod.cat;
       const hint = unitHintForName(name);
       if(hint){ unitSel.value = hint.unit; if(!qtyInput.value) qtyInput.value = hint.amount; }
@@ -145,11 +172,13 @@
   }
 
   function saveRecipe(){
-    const title=$('#r-title').value.trim(); if(!title){ alert('Bitte Titel eingeben'); return; }
-    const link =$('#r-link').value.trim();
-    const steps=$('#r-steps').value.trim();
+    const titleEl=$('#r-title'); if(!titleEl) return;
+    const title=titleEl.value.trim(); if(!title){ alert('Bitte Titel eingeben'); return; }
+    const link =($('#r-link')||{}).value?.trim?.() || '';
+    const steps=($('#r-steps')||{}).value?.trim?.() || '';
 
-    const rows=Array.from($('#ingredients').children);
+    const host=$('#ingredients'); if(!host) return;
+    const rows=Array.from(host.children);
     if(rows.length===0){ alert('Bitte mindestens eine Zutat hinzufügen'); return; }
 
     const ings = rows.map(row=>{
@@ -166,14 +195,19 @@
     const tags=collectSelectedTagsFromEditor();
     window.AppData.recipes.unshift({ id:crypto.randomUUID(), title, link, steps, img:photoData, ings, tags });
     store.save('recipes',window.AppData.recipes);
-    resetForm(); $('#recipe-editor').open=false; renderRecipeList(); toast('Rezept gespeichert');
+
+    resetForm();
+    const ed = $('#recipe-editor'); if(ed && 'open' in ed) ed.open=false;
+    renderRecipeList();
+    toast('Rezept gespeichert');
   }
 
   function resetForm(){ photoData=null; buildEditor(); }
 
   // --- Tags ---
   function renderTagPickers(existing=null){
-    const wrap=document.getElementById('tag-pickers'); wrap.innerHTML='';
+    const wrap=document.getElementById('tag-pickers'); if(!wrap) return;
+    wrap.innerHTML='';
     for(const [cat,tags] of Object.entries(TAG_CATEGORIES)){
       const box=h('div',{class:'tag-group'}); const h4=h('h4',{},cat);
       const chips=h('div',{class:'chips'});
@@ -188,7 +222,9 @@
     }
   }
   function collectSelectedTagsFromEditor(){
-    const result={}; const groups=document.querySelectorAll('#tag-pickers .tag-group');
+    const wrap = document.getElementById('tag-pickers');
+    if(!wrap) return {};
+    const result={}; const groups=wrap.querySelectorAll('.tag-group');
     groups.forEach(g=>{ const cat=g.querySelector('h4').textContent;
       const active=Array.from(g.querySelectorAll('.chip.active')).map(c=>c.textContent);
       if(active.length) result[cat]=active;
@@ -212,12 +248,18 @@
     det.appendChild(summary);
 
     const body=h('div',{style:'padding:10px;display:grid;gap:8px;'});
-    if(r.img) body.appendChild(h('img',{src:r.img,class:'img-glow',style:'width:100%; max-height:220px; object-fit:cover;'}));
+    if(r.img) body.appendChild(h('img',{src:r.img,class:'img-glow',style:'width:100%; max-height:220px; object-fit:cover; border-radius:12px;'}));
+
+    // Grundzutaten
+    const baseIngs = (r.ings||[]).filter(i=>!i.optional);
+    const optIngs  = (r.ings||[]).filter(i=> i.optional);
 
     body.append(
       h('div',{}, h('h3',{},'Zutaten'),
-        ...r.ings.filter(i=>!i.optional).map(i=>h('div',{class:'checkline'},`• ${i.name}`,i.qty?` — ${i.qty}`:'',' ',h('span',{class:'pill'},i.cat))),
-        r.ings.some(i=>i.optional)?h('div',{},h('div',{class:'muted',style:'margin:6px 0 0;'},'Add-ons:'), ...r.ings.filter(i=>i.optional).map(i=>h('span',{class:'pill',style:'margin:4px 6px 0 0;'},i.name+(i.qty?` • ${i.qty}`:'')))):null
+        ...baseIngs.map(i=>h('div',{class:'checkline'},`• ${i.name}`,i.qty?` — ${i.qty}`:'',' ',h('span',{class:'pill'},i.cat))),
+        optIngs.length ? h('div',{},h('div',{class:'muted',style:'margin:6px 0 0;'},'Add-ons:'),
+          ...optIngs.map(i=>h('span',{class:'pill',style:'margin:4px 6px 0 0;'},i.name+(i.qty?` • ${i.qty}`:'')))
+        ) : null
       ),
       r.steps?h('div',{},h('h3',{},'Anleitung'),h('div',{},r.steps)):null
     );
@@ -228,58 +270,80 @@
       body.appendChild(tagWrap);
     }
 
-    body.appendChild(
-      h('div',{style:'display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;'},
-        h('button',{type:'button',class:'btn pink',onclick:()=>openAddDialog(r.id)},'Zum Einkaufskorb'),
-        h('button',{type:'button',class:'btn pink-ghost',onclick:()=>editRecipe(r.id)},'Bearbeiten'),
-        h('button',{type:'button',class:'btn neutral',onclick:()=>deleteRecipe(r.id)},'Löschen')
-      )
-    );
+    // Buttons + Feedback
+    const btnAdd = h('button',{type:'button',class:'btn pink',onclick:()=>openAddDialog(r.id, btnAdd)},'Zum Einkaufskorb');
+    const btnEdit= h('button',{type:'button',class:'btn pink-ghost',onclick:()=>editRecipe(r.id)},'Bearbeiten');
+    const btnDel = h('button',{type:'button',class:'btn neutral',onclick:()=>deleteRecipe(r.id)},'Löschen');
+
+    const actions = h('div',{style:'display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;'}, btnAdd, btnEdit, btnDel);
+    body.appendChild(actions);
 
     det.appendChild(body);
     return det;
   }
 
+  function flashButtonSuccess(btn, okText='Hinzugefügt ✓'){
+    if(!btn) return;
+    const oldText = btn.textContent;
+    btn.classList.add('success'); // erwarte CSS .btn.success { outline/box-shadow oder Hintergrundwechsel }
+    btn.disabled = true;
+    btn.textContent = okText;
+    setTimeout(()=>{
+      btn.classList.remove('success');
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }, 1200);
+  }
+
   function renderRecipeList(){
-    const q=$('#search-recipes').value; const listEl=$('#recipe-list'); listEl.innerHTML='';
-    const list=window.AppData.recipes.filter(r=>matchRecipe(r,q));
+    const qEl=$('#search-recipes');
+    const q=qEl ? qEl.value : '';
+    const listEl=$('#recipe-list'); if(!listEl) return;
+    listEl.innerHTML='';
+    const list=(window.AppData.recipes||[]).filter(r=>matchRecipe(r,q));
     if(!list.length){ listEl.appendChild(h('div',{class:'muted'},q?'Keine Treffer.':'Noch keine Rezepte.')); return; }
     list.forEach(r=>listEl.appendChild(recipeCard(r)));
   }
 
   function deleteRecipe(id){
     if(!confirm('Rezept wirklich löschen?')) return;
-    window.AppData.recipes = window.AppData.recipes.filter(r=>r.id!==id);
+    window.AppData.recipes = (window.AppData.recipes||[]).filter(r=>r.id!==id);
     store.save('recipes',window.AppData.recipes); renderRecipeList();
   }
 
   function editRecipe(id){
-    const r=window.AppData.recipes.find(x=>x.id===id); if(!r) return; $('#recipe-editor').open=true; buildEditor();
-    $('#r-title').value=r.title; $('#r-link').value=r.link||''; $('#r-steps').value=r.steps||'';
-    if(r.img){ photoData=r.img; const prev=$('#r-photo-preview'); prev.src=r.img; prev.style.display='block'; }
-    const host=$('#ingredients');
-    r.ings.forEach(i=>{
-      const q=parseQty(i.qty||'');
-      host.appendChild(ingredientRow({name:i.name, amount:q.value ?? '', unit:q.unit ?? '', cat:i.cat, optional:!!i.optional}));
-    });
+    const r=(window.AppData.recipes||[]).find(x=>x.id===id); if(!r) return; const ed=$('#recipe-editor'); if(ed && 'open' in ed) ed.open=true;
+    buildEditor();
+    const t=$('#r-title'); if(t) t.value=r.title||'';
+    const l=$('#r-link'); if(l) l.value=r.link||'';
+    const s=$('#r-steps'); if(s) s.value=r.steps||'';
+    if(r.img){ photoData=r.img; const prev=$('#r-photo-preview'); if(prev){ prev.src=r.img; prev.style.display='block'; } }
+    const host=$('#ingredients'); if(host){
+      r.ings.forEach(i=>{
+        const q=parseQty(i.qty||'');
+        host.appendChild(ingredientRow({name:i.name, amount:q.value ?? '', unit:q.unit ?? '', cat:i.cat, optional:!!i.optional}));
+      });
+    }
     renderTagPickers(r.tags||null); window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  function openAddDialog(recipeId){
-    const r=window.AppData.recipes.find(x=>x.id===recipeId); if(!r) return;
+  function openAddDialog(recipeId, sourceBtn){
+    const r=(window.AppData.recipes||[]).find(x=>x.id===recipeId); if(!r) return;
     const base = r.ings.filter(i=>!i.optional);
     const opts = r.ings.filter(i=>i.optional);
 
-    const overlay = h('div',{style:'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);z-index:1000;', onclick:(ev)=>{ if(ev.target===overlay) overlay.remove(); }});
-    const modal = h('div',{class:'card', style:'max-width:520px;width:92%; border-radius:20px;'});
+    const overlay = h('div',{style:'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);z-index:1000;'});
+    overlay.addEventListener('click',(ev)=>{ if(ev.target===overlay) document.body.removeChild(overlay); });
+
+    const modal = h('div',{class:'card', style:'max-width:520px;width:92%; border-radius:20px; background:#fff;'});
     modal.appendChild(h('div',{class:'section-title'},'Zum Einkaufskorb hinzufügen'));
     modal.appendChild(h('div',{class:'muted'},`Rezept: ${r.title}`));
     const list = h('div',{style:'max-height:50vh; overflow:auto; margin:10px 0; border:1px dashed var(--border);border-radius:12px; padding:8px;'});
     if(opts.length){
       list.appendChild(h('div',{class:'section-title'},'Optionale Add-ons'));
-      opts.forEach((opt)=>{
-        const id = crypto.randomUUID();
-        const line = h('label',{class:'checkline', for:id, style:'border:0; padding:6px 0;'},
+      opts.forEach((opt, idx)=>{
+        const id = 'opt-' + idx + '-' + crypto.randomUUID();
+        const line = h('label',{class:'checkline', for:id, style:'border:0; padding:6px 0; display:flex; align-items:center; gap:6px;'},
           h('input',{id, type:'checkbox'}),' ', h('span',{},opt.name),
           opt.qty? h('span',{class:'muted'},` — ${opt.qty}`): null,
           h('span',{class:'right'}), h('span',{class:'pill'},opt.cat)
@@ -290,13 +354,20 @@
       list.appendChild(h('div',{class:'muted'},'Keine optionalen Zutaten vorhanden.'));
     }
     const actions = h('div',{style:'display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;'},
-      h('button',{type:'button',class:'btn neutral',onclick:()=>overlay.remove()},'Abbrechen'),
+      h('button',{type:'button',class:'btn neutral',onclick:()=>document.body.removeChild(overlay)},'Abbrechen'),
       h('button',{type:'button',class:'btn pink',onclick:()=>{
-        const chosen = Array.from(list.querySelectorAll('input[type="checkbox"]')).map((cb,i)=>cb.checked?opts[i]:null).filter(Boolean);
+        const checkboxes = Array.from(list.querySelectorAll('input[type="checkbox"]'));
+        const chosen = checkboxes.map((cb,i)=>cb.checked?opts[i]:null).filter(Boolean);
         const selected = [];
         base.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat, name:i.name}); selected.push({...i, qty:ensured.qtyStr, addon:false});});
         chosen.forEach(i=>{ const ensured=ensureQtyObject({qty:i.qty, cat:i.cat, name:i.name}); selected.push({...i, qty:ensured.qtyStr, addon:true});});
-        window.Cart.addToCart(selected, r); overlay.remove(); toast('Zum Korb hinzugefügt');
+        if(window.Cart && typeof window.Cart.addToCart === 'function'){
+          window.Cart.addToCart(selected, r);
+        }
+        document.body.removeChild(overlay);
+        toast('Zum Korb hinzugefügt');
+        // Visuelles Feedback am Auslöser-Button
+        flashButtonSuccess(sourceBtn || null, 'Hinzugefügt ✓');
       }},'In den Korb')
     );
     modal.append(list, actions);
@@ -304,5 +375,39 @@
     document.body.appendChild(overlay);
   }
 
-  window.Recipes = { buildEditor, renderTagPickers, renderFilterChips, renderRecipeList, deleteRecipe, editRecipe, openAddDialog };
+  // ---- Filterchips rendern (Fehler-Fix) ----
+  function renderFilterChips(){
+    const host = $('#filter-chips');
+    if(!host) return; // kein Container vorhanden -> silently ignore
+    host.innerHTML = '';
+    // Pro Tag-Kategorie eine Gruppe Chips
+    Object.entries(TAG_CATEGORIES).forEach(([cat, tags])=>{
+      const group = h('div',{class:'chip-group'});
+      group.appendChild(h('span',{class:'chip-label'},cat+':'));
+      tags.forEach(t=>{
+        const chip = h('button',{type:'button',class:'chip'}, t);
+        chip.addEventListener('click', ()=>{
+          // toggle
+          if(selectedFilters[cat].has(t)) selectedFilters[cat].delete(t);
+          else selectedFilters[cat].add(t);
+          chip.classList.toggle('active');
+          renderRecipeList();
+        });
+        group.appendChild(chip);
+      });
+      host.appendChild(group);
+    });
+    // Clear-Button
+    const clearBtn = h('button',{type:'button',class:'btn neutral small', style:'margin-left:8px;', onclick:()=>{
+      Object.values(selectedFilters).forEach(set=>set.clear());
+      host.querySelectorAll('.chip.active').forEach(el=>el.classList.remove('active'));
+      renderRecipeList();
+    }},'Filter löschen');
+    host.appendChild(clearBtn);
+  }
+
+  // Export
+  window.Recipes = {
+    buildEditor, renderTagPickers, renderFilterChips, renderRecipeList, deleteRecipe, editRecipe, openAddDialog
+  };
 })();
